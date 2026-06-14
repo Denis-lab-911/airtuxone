@@ -1,0 +1,48 @@
+[metadata]
+name = "AirTux One"
+version = "0.1.0"
+
+[source_device]
+# Détection : premier device evdev correspondant à ces critères
+name = "Turtle Beach VelocityOne Flightstick"
+vendor_id = 0x10F5
+product_id = 0x7055
+
+[daemon]
+grab_source = true
+log_level = "INFO"
+
+# --- Manette virtuelle 1 : manche (stick) + boutons de base ---
+[virtual_controller_1]
+device_name = "AirTux One - Flightstick"
+vendor_id = 0x045E
+product_id = 0x028E
+
+[virtual_controller_1.mapping.axes]
+# PLACEHOLDER — confirmer les codes source via evtest sur le matériel réel
+# Format : source = { target = "ABS_X", invert = false, deadzone = 0 }
+ABS_RX = { target = "ABS_X", invert = false, deadzone = 0 }
+ABS_RY = { target = "ABS_Y", invert = true, deadzone = 0 }
+ABS_X  = { target = "ABS_RX", invert = false, deadzone = 0 }
+ABS_Y  = { target = "ABS_RY", invert = false, deadzone = 0 }
+
+[virtual_controller_1.mapping.buttons]
+# PLACEHOLDER — confirmer via evtest
+BTN_TRIGGER = "BTN_SOUTH"
+BTN_THUMB   = "BTN_EAST"
+BTN_TOP     = "BTN_NORTH"
+BTN_PINKIE  = "BTN_WEST"
+
+# --- Manette virtuelle 2 : quadrant des gaz (throttle) ---
+[virtual_controller_2]
+device_name = "AirTux One - Throttle"
+vendor_id = 0x045E
+product_id = 0x028E
+
+[virtual_controller_2.mapping.axes]
+# Axes quadrant des gaz → sticks analogiques de la 2e manette
+ABS_Z  = { target = "ABS_RX", invert = false, deadzone = 0 }
+ABS_RZ = { target = "ABS_RY", invert = false, deadzone = 0 }
+
+[virtual_controller_2.mapping.buttons]
+# Boutons throttle si nécessaire — laisser vide ou compléter via evtest
