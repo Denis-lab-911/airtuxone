@@ -153,7 +153,7 @@ install_system_packages() {
     wait_for_apt_lock
 
     # Install without apt-get update first — avoids failures from broken third-party repos
-    # (e.g. Cursor apt repo missing GPG key) that are unrelated to AirTux One.
+    # (e.g. third-party apt repo missing GPG key) that are unrelated to AirTux One.
     log_ok "Installing: ${missing_arr[*]} (without apt update)..."
     if try_apt_install "${missing_arr[@]}" && system_packages_installed; then
         log_ok "System packages installed"
@@ -163,7 +163,7 @@ install_system_packages() {
     log_warn "Direct install failed — trying apt-get update..."
     local update_err
     if ! update_err=$(require_sudo apt-get update 2>&1); then
-        log_warn "apt-get update failed (often a third-party repo, e.g. Cursor GPG key):"
+        log_warn "apt-get update failed (often a third-party repo with a missing GPG key):"
         echo "$update_err" | grep -E '^(W:|E:)' | tail -5 | while read -r line; do
             log_warn "$line"
         done
@@ -176,7 +176,7 @@ install_system_packages() {
         log_err "Install manually (depots Mint officiels uniquement) :"
         log_err "  sudo apt install ${missing_arr[*]}"
         log_err "Si deja installes : ./setup.sh --skip-apt"
-        log_err "Depot Cursor casse (NO_PUBKEY) : desactivez-le ou corrigez la cle GPG — voir README"
+        log_err "Dépôt tiers invalide (NO_PUBKEY) — désactivez-le ou corrigez la clé GPG — voir README"
         exit 1
     fi
 

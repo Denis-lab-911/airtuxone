@@ -12,7 +12,7 @@ product_id = 0x7055
 grab_source = true
 log_level = "INFO"
 
-# VC1 vide : leurre (Chrome saute le 1er gamepad virtuel). Utiliser l'onglet 3.
+# Section technique requise par le moteur — ne pas y placer de mappings.
 [virtual_controller_1]
 device_name = "AirTux One - Decoy"
 vendor_id = 0x045E
@@ -41,21 +41,26 @@ ABS_RZ = { target = "ABS_RY", invert = false, deadzone = 0, mode = "linear_posit
 # POV H1 — croix directionnelle
 ABS_HAT0X = { target = "ABS_HAT0X", invert = false, deadzone = 0, mode = "passthrough" }
 ABS_HAT0Y = { target = "ABS_HAT0Y", invert = false, deadzone = 0, mode = "passthrough" }
-# ABS_RUDDER (molette) : non mappé — trim via B5/B6 ci-dessous
+# ABS_RUDDER (molette trim) : non mappé — trim via B5/B6
+# ABS_RY (H2 vertical) : non mappé — RS Y réservé au gaz ; regard vertical via POV
+# ABS_THROTTLE (levier droit) : non mappé — MSFS gamepad = un seul axe gaz
 
 [virtual_controller_2.mapping.buttons]
-# Face manche — confirmé discover
-BTN_TRIGGER         = "BTN_SOUTH"    # A
-BTN_THUMB           = "BTN_EAST"     # B
-BTN_THUMB2          = "BTN_WEST"     # X
-BTN_TOP             = "BTN_NORTH"    # Y
-# Gâchette quadrant (si distincte du TRIGGER)
-BTN_TRIGGER_HAPPY2  = "BTN_SOUTH"
-# Trim pitch — B5/B6 (RB + D-Pad maintenu pendant l'appui)
+# Face manche
+BTN_TRIGGER         = "BTN_SOUTH"    # A — freins roues
+BTN_THUMB           = "BTN_EAST"     # B — libre
+BTN_THUMB2          = "BTN_WEST"     # X — train
+BTN_TOP             = "BTN_NORTH"    # Y — changer de vue
+BTN_TRIGGER_HAPPY2  = "BTN_SOUTH"    # gâchette → A
+# Trim pitch — RB réservé modificateur (pas d'appui RB direct ailleurs)
 BTN_TOP2            = { mode = "dpad_hold", modifier_button = "BTN_TR", hat = "ABS_HAT0Y", hat_value = -1 }
 BTN_PINKIE          = { mode = "dpad_hold", modifier_button = "BTN_TR", hat = "ABS_HAT0Y", hat_value = 1 }
-# B1–B4 base manche (à confirmer discover)
-BTN_BASE            = "BTN_TL"
-BTN_BASE2           = "BTN_TR"
-BTN_BASE3           = "BTN_WEST"
-BTN_BASE4           = "BTN_NORTH"
+# Base manche — B7/B8
+BTN_BASE            = "BTN_TL"       # volets rentrer
+BTN_BASE2           = "BTN_EAST"     # B8 — volets sortir (partage B avec face)
+# Base plateau
+BTN_TRIGGER_HAPPY5  = "BTN_THUMBL"   # bas gauche — réinitialiser la vue
+BTN_TRIGGER_HAPPY6  = "BTN_START"    # bas milieu — menu pause
+BTN_TRIGGER_HAPPY7  = "BTN_THUMBR"   # bas droit — libre
+BTN_TRIGGER_HAPPY4  = "BTN_MODE"     # bouton Xbox
+BTN_DEAD            = "BTN_SELECT"   # B16 — sélection / menu

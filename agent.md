@@ -2,53 +2,49 @@
 
 ## [Objectif Général]
 
-Développer un démon Linux (AirTux One) qui intercepte les entrées d'un TurtleBeach VelocityOne Flightstick via `evdev` et les traduit vers **deux manettes Xbox 360 virtuelles** distinctes via `uinput`. Objectif : permettre à Google Chrome et GeForce NOW de recevoir l'ensemble des axes analogiques (quadrant des gaz + manche) pour jouer à Flight Simulator sans perte de précision.
+Développer un démon Linux (AirTux One) qui intercepte les entrées d'un TurtleBeach VelocityOne Flightstick via `evdev` et les traduit vers une **manette Xbox 360 virtuelle** via `uinput`. Objectif : permettre à Google Chrome et GeForce NOW de piloter Microsoft Flight Simulator avec le manche, les gaz et les boutons du stick.
 
 ## [Architecture Validée]
 
 ```
 airtuxone/
-├── .cursorrules          # Règles agent Cursor
-├── agent.md              # Ce journal
-├── config.toml           # Mapping TOML (virtual_controller_1 et 2)
-├── requirements.txt      # evdev, tomli (Python < 3.11)
-├── setup.sh              # Script d'installation Linux Mint
-├── .gitignore
+├── agent.md
+├── config.toml           # Mapping TOML (section virtual_controller_2)
+├── mapping_velocityone_xbox.md
+├── requirements.txt
+├── setup.sh
 ├── README.md
 └── airtux_one/
     ├── __init__.py
-    ├── core.py           # Démon, boucle evdev, signaux SIGTERM/SIGINT
-    ├── devices.py        # Détection source, 2× uinput Xbox 360
+    ├── core.py           # Démon, boucle evdev, signaux, trim dpad_hold
+    ├── devices.py        # Détection source, uinput Xbox 360
+    ├── discover.py       # Assistant découverte axes/boutons
     └── mapper.py         # Chargement TOML, lookup O(1), transformations
 ```
 
 - Mapping 100 % externe via `config.toml` (aucun code en dur).
 - Lookup O(1) : dictionnaires inversés au démarrage dans `mapper.py`.
 - Permissions Linux : groupes `input` et `uinput`, module noyau `uinput`.
+- Mapping MSFS : voir `mapping_velocityone_xbox.md`.
 
 ## [Tâches Réalisées]
 
-- [x] Initialisation du plan d'implémentation
-- [x] Création de `.cursorrules` et `agent.md`
-- [x] Scaffolding : `.gitignore`, `requirements.txt`, `setup.sh`, `__init__.py`
-- [x] `config.toml` avec schéma virtual_controller_1/2 (placeholders evtest)
-- [x] `mapper.py` : chargement TOML, inversion dict O(1), transformations invert/deadzone
-- [x] `devices.py` : détection source, 2× UInput Xbox 360, grab/ungrab
-- [x] `core.py` : boucle evdev avec select (arrêt réactif), signaux SIGTERM/SIGINT
-- [x] `README.md` : installation, config, systemd, dépannage
-- [x] Vérification syntaxe Python et chargement config (10 mappings)
+- [x] Scaffolding, `setup.sh`, modules Python (`core`, `devices`, `mapper`)
+- [x] `discover.py` — assistant de découverte des entrées
+- [x] Mapping MSFS VelocityOne → Xbox (`config.toml`, modes `split_triggers`, `dpad_hold`, `linear_positive`)
+- [x] Trim pitch via B5/B6 (`BTN_TOP2`, `BTN_PINKIE`) → RB + D-Pad maintenu
+- [x] Contournement Chrome : masquage js0 physique (udev), sélection manette **AirTux One** dans le navigateur
+- [x] Documentation : `README.md`, `mapping_velocityone_xbox.md`
 
 ## [Tâches Restantes]
 
-- [ ] Validation matérielle via `evtest` sur VelocityOne réel
-- [ ] Ajustement des codes source dans `config.toml` selon le matériel
-- [ ] Test Chrome / GeForce NOW avec deux manettes détectées
+- [x] Résolution conflits mapping : RB réservé trim, volets B8→B, suppression BASE3/4, boutons plateau
+- [ ] Test MSFS / GeForce NOW avec mapping définitif
 
 ## [Journal des Modifications]
 
 | Date | Action |
 |------|--------|
-| 2026-06-14 | Initialisation du projet et plan validé |
-| 2026-06-14 | Ajout du script `setup.sh` au plan |
-| 2026-06-14 | Début de l'implémentation — création `.cursorrules` et `agent.md` |
-| 2026-06-15 | config.toml : mapping complet VelocityOne PC (table utilisateur) |
+| 2026-06-14 | Initialisation du projet |
+| 2026-06-15 | Mapping MSFS, discover, trim B5/B6, push GitHub |
+| 2026-06-15 | Mapping : conflits RB/volets corrigés, boutons plateau ajoutés |

@@ -1,6 +1,6 @@
 # AirTux One
 
-Démon Linux qui lit un **TurtleBeach VelocityOne Flightstick** via `evdev` et émet vers **deux manettes Xbox 360 virtuelles** via `uinput`. Conçu pour Google Chrome et GeForce NOW afin de transmettre l'ensemble des axes analogiques (manche + quadrant des gaz) à Flight Simulator sans perte de précision.
+Démon Linux qui lit un **TurtleBeach VelocityOne Flightstick** via `evdev` et émet vers une **manette Xbox 360 virtuelle** via `uinput`. Conçu pour Google Chrome et GeForce NOW afin de piloter Microsoft Flight Simulator avec le manche, les gaz et les boutons du stick.
 
 ## Installation rapide
 
@@ -37,14 +37,12 @@ Si le Gestionnaire de mises à jour Mint (`aptk`) bloque apt :
 
 Le script attendra sinon jusqu'à 2 minutes que le verrou apt soit libéré.
 
-Si `apt-get update` échoue à cause du dépôt **Cursor** (`NO_PUBKEY 42A1772E62E492D6`), ce n'est pas lié à AirTux One. Le script tente d'abord l'installation **sans** `apt update`. Sinon :
+Si `apt-get update` échoue à cause d'un **dépôt tiers** (`NO_PUBKEY`), ce n'est pas lié à AirTux One. Le script tente d'abord l'installation **sans** `apt update`. Sinon :
 
 ```bash
 sudo apt install python3-venv python3-pip evtest
 ./setup.sh --skip-apt
 ```
-
-Pour corriger le dépôt Cursor (optionnel) : désactiver temporairement `/etc/apt/sources.list.d/cursor.list` ou réimporter la clé GPG depuis la doc Cursor.
 
 ### Ignorer les règles udev
 
@@ -78,8 +76,9 @@ Tout le mapping est défini dans [`config.toml`](config.toml). **Aucun axe ou bo
 |---------|------|
 | `[source_device]` | Critères de détection du flightstick (nom, vendor, product) |
 | `[daemon]` | Options du démon (`grab_source`, `log_level`) |
-| `[virtual_controller_1]` | Manette virtuelle 1 — manche + boutons de base |
-| `[virtual_controller_2]` | Manette virtuelle 2 — quadrant des gaz |
+| `[virtual_controller_2]` | Manette virtuelle **AirTux One** — mapping complet (axes, boutons) |
+
+Le mapping MSFS validé est documenté dans [`mapping_velocityone_xbox.md`](mapping_velocityone_xbox.md).
 
 ### Mode PC obligatoire (axes des gaz)
 
@@ -176,14 +175,14 @@ product_id = 0x7055
 Exemple d'entrée d'axe :
 
 ```toml
-[virtual_controller_1.mapping.axes]
-ABS_RX = { target = "ABS_X", invert = false, deadzone = 128 }
+[virtual_controller_2.mapping.axes]
+ABS_X = { target = "ABS_X", invert = false, deadzone = 4096, mode = "centered" }
 ```
 
 Exemple d'entrée bouton :
 
 ```toml
-[virtual_controller_1.mapping.buttons]
+[virtual_controller_2.mapping.buttons]
 BTN_TRIGGER = "BTN_SOUTH"
 ```
 
@@ -231,13 +230,13 @@ systemctl --user status airtux-one.service
 
 ## Vérification
 
-### 1. Manettes virtuelles créées (evtest)
+### 1. Manette virtuelle créée (evtest)
 
 Après avoir lancé le démon (`python -m airtux_one.core`) :
 
 ```bash
 evtest
-# Choisir « AirTux One - Flightstick » et « AirTux One - Throttle »
+# Choisir « AirTux One »
 ```
 
 Ou lister les devices :
@@ -256,19 +255,16 @@ grep -H . /sys/class/input/event*/device/name | grep -i airtux
 | **jstest-gtk** | `sudo apt install jstest-gtk` → interface graphique |
 | **jstest** | `jstest /dev/input/jsN` (numéro du device virtuel) |
 
-Sur le testeur web : sélectionnez l'**onglet 3** (« AirTux One ») — c'est la manette complète.
+Sur le testeur web : sélectionnez l'entrée **« AirTux One »** (souvent la 3ᵉ manette listée sous Chrome/Linux, après le stick physique).
 
-**Numérotation gamepad-tester (comportement Chrome/Linux typique) :**
+**Repérer la bonne manette :**
 
-| Position | Device | Contenu |
-|----------|--------|---------|
-| **1** | Stick physique (`event21` / `js0`) | Ne réagit pas (grab evdev par le démon) — normal |
-| **2** | Leurre virtuel (`js1`) | Vide — Chrome ignore souvent ce slot |
-| **3** | **AirTux One** (`js2`) | **Manette à utiliser** — manche, boutons, gaz, trim |
+| Indice | Nom typique | Utilisation |
+|--------|-------------|-------------|
+| 1 | Stick physique | Ne réagit pas (grab evdev) — normal |
+| 2–3 | Autres entrées | **Choisir « AirTux One »** (`vendor 045e`, `product 02a1`) |
 
-Tous les mappings sont sur `virtual_controller_2`. Le VC1 vide absorbe le bug Chrome qui saute le 1er gamepad virtuel.
-
-**Masquer js0** (optionnel, réduit parfois la confusion) :
+**Masquer js0** (optionnel, réduit la confusion avec le stick physique) :
 
 ```bash
 ./setup.sh --skip-apt    # règle udev TAG-=uaccess
@@ -284,9 +280,9 @@ Le démon lit toujours le stick via **evdev** (`event21`), pas via `js0`.
 3. **Démon lancé** : `python -m airtux_one.core` doit tourner dans un terminal
 4. **Test local d'abord** :
    ```bash
-   jstest /dev/input/js2   # AirTux One complet — Ctrl+C pour quitter
+   jstest /dev/input/js2   # ou le jsN d'AirTux One — Ctrl+C pour quitter
    ```
-   Si `jstest` réagit au manche physique mais pas le navigateur, utilisez l'**onglet 3** sur gamepad-tester
+   Si `jstest` réagit au manche physique mais pas le navigateur, fermez et rouvrez l'onglet du testeur après avoir bougé le stick
 5. **Chrome Flatpak** : accès `/dev/input` parfois bloqué — préférez le `.deb` officiel
 
 ### 3. Test GeForce NOW
@@ -294,7 +290,7 @@ Le démon lit toujours le stick via **evdev** (`event21`), pas via `js0`.
 1. Démon AirTux One lancé **avant** d'ouvrir GeForce NOW
 2. Ouvrir GeForce NOW dans **Google Chrome** (recommandé pour le Gamepad API)
 3. Lancer un jeu compatible manette
-4. Dans les réglages du jeu / GeForce NOW, sélectionner la manette **AirTux One** (souvent la 3ᵉ dans la liste)
+4. Dans les réglages du jeu / GeForce NOW, sélectionner la manette **AirTux One**
 
 ### 4. Mapping axe par axe
 
@@ -314,12 +310,12 @@ Bouger le manche physique → observer les axes sur la bonne manette virtuelle.
 | Device source introuvable | Brancher le VelocityOne ; `./setup.sh --check` ; vérifier `vendor_id`/`product_id` dans `config.toml` |
 | Gaz / throttle sans précision (evtest : 0, 1, 32768) | Stick en **mode Xbox** — passer en **mode PC** (section ci-dessus) |
 | Stick vu comme « Generic X-Box pad » | Mode Xbox actif — passer en mode PC sur l'OLED du stick |
-| Position 2 vide, Throttle en 3 seulement | `./setup.sh --skip-apt` puis replug USB — masque js0 physique |
-| gamepad-tester ne réagit pas | Chrome (pas Brave) ; bouger le **stick physique** avec l'onglet actif ; `jstest /dev/input/js1` |
+| Position vide / mauvaise manette dans le navigateur | Choisir **AirTux One** (`045e:02a1`) ; `./setup.sh --skip-apt` puis replug USB pour masquer js0 |
+| gamepad-tester ne réagit pas | Chrome (pas Brave) ; onglet actif ; démon lancé ; `jstest` sur le js virtuel |
 | Double entrée / conflit Steam | `grab_source = true` dans `[daemon]` (valeur par défaut) |
 | Codes d'axes incorrects | `python -m airtux_one.discover` puis mettre à jour `config.toml` |
 | `apt` lock / `aptk` en cours | Fermer le Gestionnaire de mises à jour Mint, attendre, ou `./setup.sh --skip-apt` |
-| `apt-get update` / GPG Cursor (`NO_PUBKEY`) | Erreur du dépôt Cursor, pas d'AirTux One — relancer `./setup.sh` (installe sans update) ou `./setup.sh --skip-apt` |
+| `apt-get update` / `NO_PUBKEY` (dépôt tiers) | Relancer `./setup.sh` (installe sans update) ou `./setup.sh --skip-apt` |
 
 ## Sécurité
 
@@ -331,9 +327,9 @@ Bouger le manche physique → observer les axes sur la bonne manette virtuelle.
 
 ```
 airtuxone/
-├── .cursorrules
 ├── agent.md
 ├── config.toml
+├── mapping_velocityone_xbox.md
 ├── requirements.txt
 ├── setup.sh
 ├── README.md
@@ -341,6 +337,7 @@ airtuxone/
     ├── __init__.py
     ├── core.py
     ├── devices.py
+    ├── discover.py
     └── mapper.py
 ```
 
