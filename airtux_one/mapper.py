@@ -25,6 +25,19 @@ class MappingRule:
     target_code: int
     invert: bool = False
     deadzone: int = 0
+    # "centered" : axe stick centré (ex. 0–65535, centre ~32768) → ±32767
+    # "linear"   : axe type gaz (min→-32768, max→32767)
+    # "passthrough" : valeur brute
+    # "split_triggers" : axe centré → gâchette gauche (target) / droite (secondary_target)
+    # "centered_trigger" : axe centré → une gâchette 0–255, neutre à 128 (+/- sur un seul axe)
+    mode: str = "passthrough"
+    secondary_target_code: int | None = None
+    # trim_impulse : impulsion RB + D-Pad par cran de molette
+    impulse_modifier_code: int | None = None
+    impulse_hat_up: int = -1
+    impulse_hat_down: int = 1
+    impulse_threshold: int = 256
+    impulse_hat_value: int | None = None
 
 
 @dataclass(frozen=True)
@@ -68,33 +81,43 @@ def _default_config_path() -> Path:
 
 def _resolve_ecode(name: str, category: str) -> int:
     """Résout un nom de code evdev (ex. 'ABS_X', 'BTN_SOUTH') en entier."""
+    if category == "button" and name.isdigit():
+        return int(name)
     code = ecodes.ecodes.get(name)
     if code is None:
         raise ConfigError(f"Unknown {category} code: {name!r}")
     return code
 
 
-def _parse_axis_entry(source_name: str, entry: Any) -> tuple[str, str, bool, int]:
+def _parse_axis_entry(source_name: str, entry: Any) -> tuple[str, str, bool, int, str]:
     """Normalise une entrée d'axe TOML (table ou chaîne cible seule)."""
     if isinstance(entry, str):
-        return source_name, entry, False, 0
+        return source_name, entry, False, 0, "passthrough"
     if isinstance(entry, dict):
         target = entry.get("target")
         if not target:
             raise ConfigError(f"Axis {source_name!r} missing 'target'")
+        mode = str(entry.get("mode", "passthrough"))
+        if mode not in ("centered", "linear", "linear_positive", "passthrough", "split_triggers", "centered_trigger"):
+            raise ConfigError(f"Axis {source_name!r}: invalid mode {mode!r}")
         return (
             source_name,
             target,
             bool(entry.get("invert", False)),
             int(entry.get("deadzone", 0)),
+            mode,
         )
     raise ConfigError(f"Invalid axis entry for {source_name!r}: {entry!r}")
 
 
-def _parse_button_entry(source_name: str, entry: Any) -> str:
-    """Normalise une entrée bouton TOML (chaîne cible)."""
+def _parse_button_entry(source_name: str, entry: Any) -> str | dict:
+    """Normalise une entrée bouton TOML (chaîne cible ou table spéciale)."""
     if isinstance(entry, str):
         return entry
+    if isinstance(entry, dict):
+        mode = entry.get("mode", "passthrough")
+        if mode in ("trim_pulse", "dpad_hold"):
+            return entry
     raise ConfigError(f"Invalid button entry for {source_name!r}: {entry!r}")
 
 
@@ -163,7 +186,57 @@ class EventMapper:
             mapping = section.get("mapping", {})
 
             for source_name, entry in mapping.get("axes", {}).items():
-                src, tgt, invert, deadzone = _parse_axis_entry(source_name, entry)
+                if isinstance(entry, dict) and entry.get("mode") == "trim_impulse":
+                    modifier = entry.get("modifier_button", "BTN_TR")
+                    hat = entry.get("hat", "ABS_HAT0Y")
+                    source_code = _resolve_ecode(source_name, "axis")
+                    key = (ecodes.EV_ABS, source_code)
+                    if key in self._lookup:
+                        raise ConfigError(
+                            f"Duplicate axis mapping for {source_name!r} "
+                            f"(controller {ctrl_num} vs existing)"
+                        )
+                    self._lookup[key] = MappingRule(
+                        controller_index=ctrl_index,
+                        target_type=ecodes.EV_ABS,
+                        target_code=_resolve_ecode(hat, "axis"),
+                        invert=bool(entry.get("invert", False)),
+                        deadzone=0,
+                        mode="trim_impulse",
+                        impulse_modifier_code=_resolve_ecode(modifier, "button"),
+                        impulse_hat_up=int(entry.get("hat_up", -1)),
+                        impulse_hat_down=int(entry.get("hat_down", 1)),
+                        impulse_threshold=int(entry.get("threshold", 256)),
+                    )
+                    continue
+
+                if isinstance(entry, dict) and entry.get("mode") == "split_triggers":
+                    left_name = entry.get("target_left")
+                    right_name = entry.get("target_right")
+                    if not left_name or not right_name:
+                        raise ConfigError(
+                            f"Axis {source_name!r}: split_triggers requires "
+                            "target_left and target_right"
+                        )
+                    source_code = _resolve_ecode(source_name, "axis")
+                    key = (ecodes.EV_ABS, source_code)
+                    if key in self._lookup:
+                        raise ConfigError(
+                            f"Duplicate axis mapping for {source_name!r} "
+                            f"(controller {ctrl_num} vs existing)"
+                        )
+                    self._lookup[key] = MappingRule(
+                        controller_index=ctrl_index,
+                        target_type=ecodes.EV_ABS,
+                        target_code=_resolve_ecode(left_name, "axis"),
+                        secondary_target_code=_resolve_ecode(right_name, "axis"),
+                        invert=bool(entry.get("invert", False)),
+                        deadzone=int(entry.get("deadzone", 0)),
+                        mode="split_triggers",
+                    )
+                    continue
+
+                src, tgt, invert, deadzone, mode = _parse_axis_entry(source_name, entry)
                 source_code = _resolve_ecode(src, "axis")
                 target_code = _resolve_ecode(tgt, "axis")
                 key = (ecodes.EV_ABS, source_code)
@@ -178,23 +251,62 @@ class EventMapper:
                     target_code=target_code,
                     invert=invert,
                     deadzone=deadzone,
+                    mode=mode,
                 )
 
             for source_name, entry in mapping.get("buttons", {}).items():
-                tgt = _parse_button_entry(source_name, entry)
                 source_code = _resolve_ecode(source_name, "button")
-                target_code = _resolve_ecode(tgt, "button")
                 key = (ecodes.EV_KEY, source_code)
                 if key in self._lookup:
                     raise ConfigError(
                         f"Duplicate button mapping for {source_name!r} "
                         f"(controller {ctrl_num} vs existing)"
                     )
+
+                if isinstance(entry, dict) and entry.get("mode") == "trim_pulse":
+                    modifier = entry.get("modifier_button", "BTN_TR")
+                    hat = entry.get("hat", "ABS_HAT0Y")
+                    self._lookup[key] = MappingRule(
+                        controller_index=ctrl_index,
+                        target_type=ecodes.EV_KEY,
+                        target_code=_resolve_ecode(hat, "axis"),
+                        mode="trim_pulse",
+                        impulse_modifier_code=_resolve_ecode(modifier, "button"),
+                        impulse_hat_value=int(entry.get("hat_value", -1)),
+                    )
+                    continue
+
+                if isinstance(entry, dict) and entry.get("mode") == "dpad_hold":
+                    modifier = entry.get("modifier_button")
+                    hat = entry.get("hat", "ABS_HAT0Y")
+                    mod_code = (
+                        _resolve_ecode(modifier, "button") if modifier else None
+                    )
+                    self._lookup[key] = MappingRule(
+                        controller_index=ctrl_index,
+                        target_type=ecodes.EV_KEY,
+                        target_code=_resolve_ecode(hat, "axis"),
+                        mode="dpad_hold",
+                        impulse_modifier_code=mod_code,
+                        impulse_hat_value=int(entry.get("hat_value", -1)),
+                    )
+                    continue
+
+                tgt = _parse_button_entry(source_name, entry)
+                if isinstance(tgt, dict):
+                    raise ConfigError(f"Invalid button entry for {source_name!r}")
+                target_code = _resolve_ecode(tgt, "button")
                 self._lookup[key] = MappingRule(
                     controller_index=ctrl_index,
                     target_type=ecodes.EV_KEY,
                     target_code=target_code,
                 )
+
+    def has_mappings(self, controller_index: int) -> bool:
+        """True si au moins une règle cible ce contrôleur."""
+        return any(
+            rule.controller_index == controller_index for rule in self._lookup.values()
+        )
 
     def map_event(self, event: InputEvent) -> MappingRule | None:
         """Retourne la règle correspondante ou None si l'événement n'est pas mappé."""
@@ -206,16 +318,90 @@ class EventMapper:
         value: int,
         absinfo: Any | None = None,
     ) -> int:
-        """Applique inversion et deadzone à une valeur d'axe absolu."""
+        """Applique mode, inversion, deadzone et mise à l'échelle vers la plage Xbox."""
         if rule.target_type != ecodes.EV_ABS:
             return value
 
-        if rule.invert and absinfo is not None:
-            value = absinfo.max + absinfo.min - value
+        if absinfo is None or rule.mode == "passthrough":
+            if rule.invert and absinfo is not None:
+                value = absinfo.max + absinfo.min - value
+            if rule.deadzone > 0 and absinfo is not None:
+                center = (absinfo.max + absinfo.min) // 2
+                if abs(value - center) < rule.deadzone:
+                    return 0
+            return value
 
-        if rule.deadzone > 0 and absinfo is not None:
-            center = (absinfo.max + absinfo.min) // 2
-            if abs(value - center) < rule.deadzone:
-                return center
+        src_min, src_max = absinfo.min, absinfo.max
+        center = (src_min + src_max) // 2
+        half = max((src_max - src_min) // 2, 1)
+
+        if rule.mode == "centered":
+            delta = value - center
+            if rule.deadzone > 0 and abs(delta) < rule.deadzone:
+                return 0
+            if rule.invert:
+                delta = -delta
+            return int(max(-32768, min(32767, delta * 32767 // half)))
+
+        if rule.mode == "linear":
+            span = max(src_max - src_min, 1)
+            ratio = (value - src_min) / span
+            if rule.invert:
+                ratio = 1.0 - ratio
+            return int(-32768 + ratio * 65535)
+
+        if rule.mode == "linear_positive":
+            # Levier 0%→100% (repos=min, plein=max) — adapté gaz / MSFS
+            span = max(src_max - src_min, 1)
+            ratio = (value - src_min) / span
+            if rule.invert:
+                ratio = 1.0 - ratio
+            return int(max(0, min(32767, ratio * 32767)))
 
         return value
+
+    def transform_split_triggers(
+        self,
+        rule: MappingRule,
+        value: int,
+        absinfo: Any | None = None,
+    ) -> tuple[int, int]:
+        """Axe centré → (LT, RT) en 0–255 pour gâchettes Xbox."""
+        if absinfo is None:
+            return 0, 0
+
+        src_min, src_max = absinfo.min, absinfo.max
+        center = (src_min + src_max) // 2
+        half = max((src_max - src_min) // 2, 1)
+        delta = value - center
+        if rule.invert:
+            delta = -delta
+        if rule.deadzone > 0 and abs(delta) < rule.deadzone:
+            return 0, 0
+
+        pressure = int(min(255, abs(delta) * 255 // half))
+        if delta < 0:
+            return pressure, 0
+        if delta > 0:
+            return 0, pressure
+        return 0, 0
+
+    def transform_centered_trigger(
+        self,
+        rule: MappingRule,
+        value: int,
+        absinfo: Any | None = None,
+    ) -> int:
+        """Axe centré → gâchette 0–255, neutre à 128 (moins / plus sur un seul axe)."""
+        if absinfo is None:
+            return 128
+
+        src_min, src_max = absinfo.min, absinfo.max
+        center = (src_min + src_max) // 2
+        half = max((src_max - src_min) // 2, 1)
+        delta = value - center
+        if rule.invert:
+            delta = -delta
+        if rule.deadzone > 0 and abs(delta) < rule.deadzone:
+            return 128
+        return int(max(0, min(255, 128 + delta * 127 // half)))

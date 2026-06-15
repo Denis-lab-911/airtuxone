@@ -7,6 +7,7 @@ VENV_DIR="$PROJECT_ROOT/.venv"
 VELOCITYONE_VENDOR="10f5"
 VELOCITYONE_PRODUCT="7055"
 UDEV_RULES_FILE="/etc/udev/rules.d/99-airtuxone-velocityone.rules"
+UDEV_HIDE_JS_RULES="/etc/udev/rules.d/99-airtuxone-hide-physical-js.rules"
 UINPUT_UDEV_RULES="/etc/udev/rules.d/99-airtuxone-uinput.rules"
 UINPUT_MODULE_CONF="/etc/modules-load.d/uinput.conf"
 
@@ -282,6 +283,33 @@ setup_groups() {
     fi
 }
 
+ensure_airtux_group() {
+    if group_exists airtux; then
+        log_ok "Group 'airtux' exists"
+        return
+    fi
+    log_ok "Creating group 'airtux' (masque js0 physique du navigateur)..."
+    if require_sudo groupadd --system airtux 2>/dev/null || require_sudo groupadd airtux; then
+        log_ok "Group 'airtux' created"
+    else
+        log_err "Failed to create group 'airtux'"
+        exit 1
+    fi
+}
+
+setup_hide_physical_js() {
+    ensure_airtux_group
+    log_ok "Installing udev rule to hide physical joystick from browser (js*)..."
+    require_sudo tee "$UDEV_HIDE_JS_RULES" >/dev/null <<EOF
+# AirTux One — masquer le js physique du VelocityOne pour Chrome / Gamepad API
+# Le démon lit evdev (event*) via le groupe input ; l'utilisateur n'est pas dans airtux
+KERNEL=="js*", ENV{ID_VENDOR_ID}=="${VELOCITYONE_VENDOR}", ENV{ID_MODEL_ID}=="${VELOCITYONE_PRODUCT}", GROUP="airtux", MODE="0660", TAG-="uaccess"
+EOF
+    require_sudo udevadm control --reload-rules
+    require_sudo udevadm trigger --subsystem-match=input
+    log_ok "Physical js hidden from browser (group airtux) — replug stick if js0 unchanged"
+}
+
 setup_udev() {
     if [[ -f "$UDEV_RULES_FILE" ]]; then
         log_ok "udev rules already present"
@@ -296,6 +324,20 @@ EOF
     require_sudo udevadm control --reload-rules
     require_sudo udevadm trigger
     log_ok "udev rules installed"
+}
+
+check_physical_js_hidden() {
+    if [[ -c /dev/input/js0 ]]; then
+        local vendor
+        vendor=$(cat /sys/class/input/js0/device/id/vendor 2>/dev/null || echo "")
+        if [[ "${vendor,,}" == "$VELOCITYONE_VENDOR" ]]; then
+            if [[ -r /dev/input/js0 ]]; then
+                log_warn "js0 physique encore lisible — lancez ./setup.sh pour masquer du navigateur"
+            else
+                log_ok "js0 physique masqué du navigateur (non lisible)"
+            fi
+        fi
+    fi
 }
 
 check_uinput_access() {
@@ -320,6 +362,10 @@ check_velocityone() {
         if [[ "${vendor,,}" == "$VELOCITYONE_VENDOR" && "${product,,}" == "$VELOCITYONE_PRODUCT" ]]; then
             name=$(cat "/sys/class/input/$(basename "$dev")/device/name" 2>/dev/null || echo "unknown")
             log_ok "VelocityOne detected: $dev ($name)"
+            if [[ "$name" == *"X-Box"* ]] || [[ "$name" == *"Xbox"* ]]; then
+                log_warn "Device is in Xbox mode (xpad) — throttle axes will be digital only"
+                log_warn "Switch to PC mode on the stick: Configurator Wheel → Input Mode → PC"
+            fi
             found=true
         fi
     done
@@ -342,6 +388,7 @@ run_checks() {
     echo "--- Diagnostics ---"
     check_python
     check_groups
+    check_physical_js_hidden
     check_uinput_access
     check_velocityone
     if [[ -d "$VENV_DIR" ]]; then
@@ -385,6 +432,7 @@ main() {
     setup_groups
     if ! $SKIP_UDEV; then
         setup_udev
+        setup_hide_physical_js
     fi
     run_checks
     print_next_steps

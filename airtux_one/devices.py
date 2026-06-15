@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 from evdev import AbsInfo, InputDevice, UInput, ecodes, list_devices
@@ -25,22 +26,40 @@ XBOX360_CAPABILITIES: dict[int, list[Any]] = {
         ecodes.BTN_MODE,
         ecodes.BTN_THUMBL,
         ecodes.BTN_THUMBR,
+        ecodes.BTN_TL2,
+        ecodes.BTN_TR2,
+        ecodes.BTN_DPAD_UP,
+        ecodes.BTN_DPAD_DOWN,
+        ecodes.BTN_DPAD_LEFT,
+        ecodes.BTN_DPAD_RIGHT,
     ],
     ecodes.EV_ABS: [
-        (ecodes.ABS_X, AbsInfo(value=0, min=-32768, max=32767, fuzz=16, flat=128)),
-        (ecodes.ABS_Y, AbsInfo(value=0, min=-32768, max=32767, fuzz=16, flat=128)),
-        (ecodes.ABS_Z, AbsInfo(value=0, min=0, max=255, fuzz=0, flat=0)),
-        (ecodes.ABS_RZ, AbsInfo(value=0, min=0, max=255, fuzz=0, flat=0)),
-        (ecodes.ABS_RX, AbsInfo(value=0, min=-32768, max=32767, fuzz=16, flat=128)),
-        (ecodes.ABS_RY, AbsInfo(value=0, min=-32768, max=32767, fuzz=16, flat=128)),
-        (ecodes.ABS_HAT0X, AbsInfo(value=0, min=-1, max=1, fuzz=0, flat=0)),
-        (ecodes.ABS_HAT0Y, AbsInfo(value=0, min=-1, max=1, fuzz=0, flat=0)),
+        (ecodes.ABS_X, AbsInfo(value=0, min=-32768, max=32767, fuzz=16, flat=128, resolution=0)),
+        (ecodes.ABS_Y, AbsInfo(value=0, min=-32768, max=32767, fuzz=16, flat=128, resolution=0)),
+        (ecodes.ABS_Z, AbsInfo(value=0, min=0, max=255, fuzz=0, flat=0, resolution=0)),
+        (ecodes.ABS_RZ, AbsInfo(value=0, min=0, max=255, fuzz=0, flat=0, resolution=0)),
+        (ecodes.ABS_RX, AbsInfo(value=0, min=-32768, max=32767, fuzz=16, flat=128, resolution=0)),
+        (ecodes.ABS_RY, AbsInfo(value=0, min=-32768, max=32767, fuzz=16, flat=128, resolution=0)),
+        (ecodes.ABS_HAT0X, AbsInfo(value=0, min=-1, max=1, fuzz=0, flat=0, resolution=0)),
+        (ecodes.ABS_HAT0Y, AbsInfo(value=0, min=-1, max=1, fuzz=0, flat=0, resolution=0)),
     ],
 }
 
 
 class DeviceNotFoundError(Exception):
     """Le périphérique source n'a pas été trouvé."""
+
+
+def _abs_axis_codes(device: InputDevice) -> list[int]:
+    """Extrait les codes ABS depuis capabilities (avec ou sans AbsInfo)."""
+    raw = device.capabilities().get(ecodes.EV_ABS, [])
+    codes: list[int] = []
+    for item in raw:
+        if isinstance(item, tuple):
+            codes.append(int(item[0]))
+        else:
+            codes.append(int(item))
+    return codes
 
 
 class VirtualController:
@@ -55,19 +74,90 @@ class VirtualController:
             product=config.product_id,
             bustype=ecodes.BUS_USB,
             version=0x0111,
+            phys=f"airtux/vc{config.index + 1}/input0",
         )
         logger.info(
-            "Virtual controller created: %r (vendor=0x%04X product=0x%04X)",
+            "Virtual controller created: %r (vendor=0x%04X product=0x%04X path=%s)",
             config.device_name,
             config.vendor_id,
             config.product_id,
+            self._device.device,
         )
+        self._publish_initial_state()
+
+    def _publish_initial_state(self) -> None:
+        """Publie l'état au repos — requis pour que Chrome / joydev enregistrent le gamepad."""
+        for item in XBOX360_CAPABILITIES[ecodes.EV_ABS]:
+            code, absinfo = item
+            val = 0 if absinfo.min < 0 else absinfo.min
+            self.emit_abs(code, val)
+        for key in XBOX360_CAPABILITIES[ecodes.EV_KEY]:
+            self.emit_key(key, 0)
+        self.syn()
 
     def emit_abs(self, code: int, value: int) -> None:
         self._device.write(ecodes.EV_ABS, code, value)
 
+    def emit_split_triggers(self, lt: int, rt: int) -> None:
+        """LT/RT analogiques + TL2/TR2 pour gamepad-tester / Chrome."""
+        self.emit_abs(ecodes.ABS_Z, lt)
+        self.emit_abs(ecodes.ABS_RZ, rt)
+        self.emit_key(ecodes.BTN_TL2, min(lt, 255))
+        self.emit_key(ecodes.BTN_TR2, min(rt, 255))
+
+    def emit_analog_trigger(self, code: int, value: int) -> None:
+        """Une gâchette analogique + bouton TL2/TR2 associé."""
+        self.emit_abs(code, value)
+        if code == ecodes.ABS_Z:
+            self.emit_key(ecodes.BTN_TL2, value)
+        elif code == ecodes.ABS_RZ:
+            self.emit_key(ecodes.BTN_TR2, value)
+
     def emit_key(self, code: int, value: int) -> None:
         self._device.write(ecodes.EV_KEY, code, value)
+
+    def emit_trim_combo(self, modifier: int, hat_y: int, frames: int = 12) -> None:
+        """RB + D-Pad (hat + boutons) — impulsion courte pour MSFS."""
+        dpad_btn = ecodes.BTN_DPAD_UP if hat_y < 0 else ecodes.BTN_DPAD_DOWN if hat_y > 0 else 0
+        for _ in range(frames):
+            self.emit_key(modifier, 1)
+            self.emit_abs(ecodes.ABS_HAT0Y, hat_y)
+            if dpad_btn:
+                self.emit_key(dpad_btn, 1)
+            self.syn()
+            time.sleep(0.02)
+        self.emit_key(modifier, 0)
+        self.emit_abs(ecodes.ABS_HAT0Y, 0)
+        for btn in (
+            ecodes.BTN_DPAD_UP,
+            ecodes.BTN_DPAD_DOWN,
+            ecodes.BTN_DPAD_LEFT,
+            ecodes.BTN_DPAD_RIGHT,
+        ):
+            self.emit_key(btn, 0)
+        self.syn()
+
+    def emit_dpad_hold(
+        self,
+        hat_y: int,
+        pressed: bool,
+        modifier: int | None = None,
+    ) -> None:
+        """D-Pad (hat + boutons) maintenu tant que le bouton source est enfoncé."""
+        val = 1 if pressed else 0
+        if modifier is not None:
+            self.emit_key(modifier, val)
+        self.emit_abs(ecodes.ABS_HAT0Y, hat_y if pressed else 0)
+        dpad_btn = (
+            ecodes.BTN_DPAD_UP
+            if hat_y < 0
+            else ecodes.BTN_DPAD_DOWN
+            if hat_y > 0
+            else 0
+        )
+        if dpad_btn:
+            self.emit_key(dpad_btn, val)
+        self.syn()
 
     def syn(self) -> None:
         # SYN_REPORT synchronise l'état auprès du noyau / consommateurs
@@ -90,7 +180,7 @@ class DeviceManager:
         self._controller_configs = controller_configs
         self._grab_source = grab_source
         self.source: InputDevice | None = None
-        self.controllers: list[VirtualController] = []
+        self.controllers: dict[int, VirtualController] = {}
 
     def open(self) -> None:
         self.source = self._find_source_device()
@@ -103,9 +193,9 @@ class DeviceManager:
             self.source.grab()
             logger.info("Source device grabbed (exclusive access)")
 
-        self.controllers = [
-            VirtualController(cfg) for cfg in self._controller_configs
-        ]
+        self.controllers = {}
+        for cfg in self._controller_configs:
+            self.controllers[cfg.index] = VirtualController(cfg)
 
     def close(self) -> None:
         if self.source is not None:
@@ -117,7 +207,7 @@ class DeviceManager:
             self.source.close()
             self.source = None
 
-        for controller in self.controllers:
+        for controller in self.controllers.values():
             controller.close()
         self.controllers.clear()
 
@@ -129,7 +219,7 @@ class DeviceManager:
         self.close()
 
     def _find_source_device(self) -> InputDevice:
-        """Parcourt les devices evdev et retourne le premier correspondant à la config."""
+        """Parcourt les devices evdev et retourne le joystick (pas le touchpad)."""
         candidates: list[InputDevice] = []
 
         for path in list_devices():
@@ -153,29 +243,44 @@ class DeviceManager:
             )
 
             if name_match and vendor_match and product_match:
-                candidates.append(device)
+                if self._is_joystick_interface(device):
+                    candidates.append(device)
+                else:
+                    logger.debug("Skipping non-joystick interface: %s", device.path)
+                    device.close()
             else:
                 device.close()
 
         if not candidates:
             raise DeviceNotFoundError(
-                f"No device matching name={self._source_config.name!r}, "
+                f"No joystick device matching name={self._source_config.name!r}, "
                 f"vendor=0x{self._source_config.vendor_id:04X}, "
                 f"product=0x{self._source_config.product_id:04X}. "
-                "Is the VelocityOne plugged in?"
+                "Is the VelocityOne plugged in (PC mode)?"
             )
 
         if len(candidates) > 1:
             logger.warning(
-                "Multiple matching devices found; using %s",
+                "Multiple joystick interfaces found; using %s",
                 candidates[0].path,
             )
 
-        # Fermer les candidats non retenus
         for device in candidates[1:]:
             device.close()
 
         return candidates[0]
+
+    @staticmethod
+    def _is_joystick_interface(device: InputDevice) -> bool:
+        """Exclut le touchpad/souris (event22) — ne garde que le joystick (event21)."""
+        caps = device.capabilities()
+        abs_codes = _abs_axis_codes(device)
+        if not abs_codes:
+            return False
+        # Interface souris du touchpad : EV_REL sans axes de jeu
+        if ecodes.EV_REL in caps and ecodes.ABS_X not in abs_codes:
+            return False
+        return ecodes.ABS_X in abs_codes or ecodes.ABS_THROTTLE in abs_codes
 
     def get_absinfo(self, code: int) -> AbsInfo | None:
         """Retourne AbsInfo du device source pour un axe donné (inversion/deadzone)."""

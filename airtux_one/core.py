@@ -14,7 +14,9 @@ from airtux_one.mapper import ConfigError, EventMapper, MappingRule
 
 logger = logging.getLogger(__name__)
 
-# Intervalle select (s) — permet de vérifier _running entre deux événements
+# Impulsions trim : trames + délai (ms) par trame pour gamepad-tester / MSFS
+_TRIM_PULSE_FRAMES = 12
+_TRIM_PULSE_DELAY_S = 0.02
 _POLL_TIMEOUT = 0.5
 
 
@@ -25,6 +27,7 @@ class AirTuxDaemon:
         self._mapper = mapper
         self._running = False
         self._device_manager: DeviceManager | None = None
+        self._trim_last: dict[int, int] = {}
 
     def _setup_logging(self) -> None:
         level = getattr(
@@ -99,17 +102,84 @@ class AirTuxDaemon:
 
     def _emit_mapped_event(self, rule: MappingRule, event: object) -> None:
         assert self._device_manager is not None
-        controller = self._device_manager.controllers[rule.controller_index]
+        controller = self._device_manager.controllers.get(rule.controller_index)
+        if controller is None:
+            return
 
         value = event.value  # type: ignore[attr-defined]
+        event_code = event.code  # type: ignore[attr-defined]
         if rule.target_type == ecodes.EV_ABS:
-            absinfo = self._device_manager.get_absinfo(event.code)  # type: ignore[attr-defined]
-            value = self._mapper.transform_value(rule, value, absinfo)
-            controller.emit_abs(rule.target_code, value)
+            if rule.mode == "trim_impulse":
+                self._emit_trim_impulse(rule, value, event_code, controller)
+                return
+            absinfo = self._device_manager.get_absinfo(event_code)
+            if rule.mode == "split_triggers" and rule.secondary_target_code is not None:
+                lt, rt = self._mapper.transform_split_triggers(rule, value, absinfo)
+                controller.emit_split_triggers(lt, rt)
+            elif rule.mode == "centered_trigger":
+                trig = self._mapper.transform_centered_trigger(rule, value, absinfo)
+                controller.emit_analog_trigger(rule.target_code, trig)
+            else:
+                value = self._mapper.transform_value(rule, value, absinfo)
+                controller.emit_abs(rule.target_code, value)
         elif rule.target_type == ecodes.EV_KEY:
-            controller.emit_key(rule.target_code, value)
+            if rule.mode == "trim_pulse" and rule.impulse_modifier_code is not None:
+                if value:
+                    hat_val = rule.impulse_hat_value if rule.impulse_hat_value is not None else -1
+                    controller.emit_trim_combo(  # type: ignore[attr-defined]
+                        rule.impulse_modifier_code,
+                        hat_val,
+                        frames=_TRIM_PULSE_FRAMES,
+                    )
+                return
+            if rule.mode == "dpad_hold":
+                hat_val = rule.impulse_hat_value if rule.impulse_hat_value is not None else -1
+                controller.emit_dpad_hold(  # type: ignore[attr-defined]
+                    hat_val,
+                    bool(value),
+                    rule.impulse_modifier_code,
+                )
+                return
+            key_val = 1 if value else 0
+            controller.emit_key(rule.target_code, key_val)
 
         controller.syn()
+
+    def _emit_trim_impulse(
+        self,
+        rule: MappingRule,
+        value: int,
+        source_code: int,
+        controller: object,
+    ) -> None:
+        """Molette trim : impulsion RB + D-Pad Haut/Bas par cran (~280 unités)."""
+        assert rule.impulse_modifier_code is not None
+        last = self._trim_last.get(source_code)
+        if last is None:
+            self._trim_last[source_code] = value
+            return
+
+        delta = value - last
+        self._trim_last[source_code] = value
+        if rule.invert:
+            delta = -delta
+        if abs(delta) < rule.impulse_threshold:
+            return
+
+        # Trim vers le haut = valeurs qui diminuent (ex. 14969 → 12988)
+        hat_val = rule.impulse_hat_up if delta < 0 else rule.impulse_hat_down
+        logger.info(
+            "Trim impulse: %d → %d (delta=%d) → hat_y=%d + RB",
+            last,
+            value,
+            delta,
+            hat_val,
+        )
+        controller.emit_trim_combo(  # type: ignore[attr-defined]
+            rule.impulse_modifier_code,
+            hat_val,
+            frames=_TRIM_PULSE_FRAMES,
+        )
 
 
 def main() -> int:

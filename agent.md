@@ -51,4 +51,4 @@ airtuxone/
 | 2026-06-14 | Initialisation du projet et plan validé |
 | 2026-06-14 | Ajout du script `setup.sh` au plan |
 | 2026-06-14 | Début de l'implémentation — création `.cursorrules` et `agent.md` |
-| 2026-06-14 | `setup.sh` : création auto du groupe `uinput` + udev `/dev/uinput` (Mint) |
+| 2026-06-15 | config.toml : mapping complet VelocityOne PC (table utilisateur) |

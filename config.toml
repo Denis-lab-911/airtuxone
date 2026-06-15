@@ -3,8 +3,8 @@ name = "AirTux One"
 version = "0.1.0"
 
 [source_device]
-# Détection : premier device evdev correspondant à ces critères
-name = "Turtle Beach VelocityOne Flightstick"
+# Mode PC requis — event21 = joystick, event22 = touchpad (ignoré)
+name = ""
 vendor_id = 0x10F5
 product_id = 0x7055
 
@@ -12,37 +12,50 @@ product_id = 0x7055
 grab_source = true
 log_level = "INFO"
 
-# --- Manette virtuelle 1 : manche (stick) + boutons de base ---
+# VC1 vide : leurre (Chrome saute le 1er gamepad virtuel). Utiliser l'onglet 3.
 [virtual_controller_1]
-device_name = "AirTux One - Flightstick"
+device_name = "AirTux One - Decoy"
 vendor_id = 0x045E
-product_id = 0x028E
+product_id = 0x02A0
 
 [virtual_controller_1.mapping.axes]
-# PLACEHOLDER — confirmer les codes source via evtest sur le matériel réel
-# Format : source = { target = "ABS_X", invert = false, deadzone = 0 }
-ABS_RX = { target = "ABS_X", invert = false, deadzone = 0 }
-ABS_RY = { target = "ABS_Y", invert = true, deadzone = 0 }
-ABS_X  = { target = "ABS_RX", invert = false, deadzone = 0 }
-ABS_Y  = { target = "ABS_RY", invert = false, deadzone = 0 }
 
 [virtual_controller_1.mapping.buttons]
-# PLACEHOLDER — confirmer via evtest
-BTN_TRIGGER = "BTN_SOUTH"
-BTN_THUMB   = "BTN_EAST"
-BTN_TOP     = "BTN_NORTH"
-BTN_PINKIE  = "BTN_WEST"
 
-# --- Manette virtuelle 2 : quadrant des gaz (throttle) ---
+# Mapping MSFS — voir mapping_velocityone_xbox.md
 [virtual_controller_2]
-device_name = "AirTux One - Throttle"
+device_name = "AirTux One"
 vendor_id = 0x045E
-product_id = 0x028E
+product_id = 0x02A1
 
 [virtual_controller_2.mapping.axes]
-# Axes quadrant des gaz → sticks analogiques de la 2e manette
-ABS_Z  = { target = "ABS_RX", invert = false, deadzone = 0 }
-ABS_RZ = { target = "ABS_RY", invert = false, deadzone = 0 }
+# Manche — ailerons / profondeur
+ABS_X = { target = "ABS_X", invert = false, deadzone = 4096, mode = "centered" }
+ABS_Y = { target = "ABS_Y", invert = false, deadzone = 4096, mode = "centered" }
+# Torsion — palonnier (LT gauche / RT droite)
+ABS_Z = { target_left = "ABS_Z", target_right = "ABS_RZ", invert = false, deadzone = 4096, mode = "split_triggers" }
+# Mini-stick tête — regard horizontal
+ABS_RX = { target = "ABS_RX", invert = false, deadzone = 4096, mode = "centered" }
+# Gaz — manette gauche → stick droit vertical
+ABS_RZ = { target = "ABS_RY", invert = false, deadzone = 0, mode = "linear_positive" }
+# POV H1 — croix directionnelle
+ABS_HAT0X = { target = "ABS_HAT0X", invert = false, deadzone = 0, mode = "passthrough" }
+ABS_HAT0Y = { target = "ABS_HAT0Y", invert = false, deadzone = 0, mode = "passthrough" }
+# ABS_RUDDER (molette) : non mappé — trim via B5/B6 ci-dessous
 
 [virtual_controller_2.mapping.buttons]
-# Boutons throttle si nécessaire — laisser vide ou compléter via evtest
+# Face manche — confirmé discover
+BTN_TRIGGER         = "BTN_SOUTH"    # A
+BTN_THUMB           = "BTN_EAST"     # B
+BTN_THUMB2          = "BTN_WEST"     # X
+BTN_TOP             = "BTN_NORTH"    # Y
+# Gâchette quadrant (si distincte du TRIGGER)
+BTN_TRIGGER_HAPPY2  = "BTN_SOUTH"
+# Trim pitch — B5/B6 (RB + D-Pad maintenu pendant l'appui)
+BTN_TOP2            = { mode = "dpad_hold", modifier_button = "BTN_TR", hat = "ABS_HAT0Y", hat_value = -1 }
+BTN_PINKIE          = { mode = "dpad_hold", modifier_button = "BTN_TR", hat = "ABS_HAT0Y", hat_value = 1 }
+# B1–B4 base manche (à confirmer discover)
+BTN_BASE            = "BTN_TL"
+BTN_BASE2           = "BTN_TR"
+BTN_BASE3           = "BTN_WEST"
+BTN_BASE4           = "BTN_NORTH"
