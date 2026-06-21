@@ -19,6 +19,7 @@ airtuxone/
     ├── core.py           # Démon, boucle evdev, signaux, trim dpad_hold
     ├── devices.py        # Détection source, uinput Xbox 360
     ├── discover.py       # Assistant découverte axes/boutons
+    ├── learn.py          # Assistant mapping joystick ↔ manette
     └── mapper.py         # Chargement TOML, lookup O(1), transformations
 ```
 
@@ -48,3 +49,6 @@ airtuxone/
 | 2026-06-14 | Initialisation du projet |
 | 2026-06-15 | Mapping MSFS, discover, trim B5/B6, push GitHub |
 | 2026-06-15 | Mapping : conflits RB/volets corrigés, boutons plateau ajoutés |
+| 2026-06-20 | Gaz non mappé ; H2 (ABS_RX/RY) → stick droit complet |
+| 2026-06-20 | Palonnier : LT/RT analogiques seuls (sans TL2/TR2), deadzone 8192, seuil pression 8 |
+| 2026-06-20 | Script `airtuxone.sh` — lancement du démon (`python -m airtux_one.core`) |

@@ -11,48 +11,62 @@ Ce document récapitule le mapping pour transformer votre Turtle Beach VelocityO
 | **Inclinaison Stick (Axe X)** | `ABS_X` | Stick Gauche - Horizontal | **Ailerons** (Roulis) | Analogique |
 | **Inclinaison Stick (Axe Y)** | `ABS_Y` | Stick Gauche - Vertical | **Profondeur** (Tangage) | Analogique |
 | **Torsion du Stick (Axe Z)** | `ABS_Z` | Gâchettes LT / RT | **Palonnier** (Direction / Taxis) | Analogique |
-| **Manette des gaz (Levier gauche)** | `ABS_RZ` | Stick Droit - Vertical | **Poussée** (Gaz) | Analogique |
-| **Mini-stick (Tête du joystick)** | `ABS_RX` | Stick Droit - Horizontal | **Regard Horizontal** | Analogique |
-| **Chapeau chinois (POV - H1)** | `ABS_HAT0X/Y` | Croix directionnelle (D-Pad) | **Regard vertical / Menus** | Numérique |
+| **Mini-stick H2 horizontal** | `ABS_RX` | Stick Droit - Horizontal | **Regard horizontal** | Analogique |
+| **Mini-stick H2 vertical** | `ABS_RY` | Stick Droit - Vertical | **Regard vertical** | Analogique |
+| **Chapeau chinois (POV - H1)** | `ABS_HAT0X/Y` | Croix directionnelle (D-Pad) | **Menus / raccourcis** | Numérique |
 
 ### Axes non mappés (volontaire)
 
 | Élément | Code evdev | Raison |
 | :--- | :--- | :--- |
-| Mini-stick H2 vertical | `ABS_RY` | Conflit avec le gaz sur RS Y — regard vertical via POV |
-| Levier gaz droit | `ABS_THROTTLE` | MSFS gamepad n'expose qu'un axe gaz |
-| Molette trim | `ABS_RUDDER` | Trim pitch via boutons B5/B6 |
+| Levier gaz gauche | `ABS_RZ` | Non mappé — poussée gérée autrement dans MSFS |
+| Levier gaz droit | `ABS_THROTTLE` | Non mappé |
+| Molette trim | `ABS_RUDDER` | Non mappé |
 
-### Boutons
+### Boutons face (A/B/X/Y)
 
-| Élément physique (VelocityOne) | Code evdev source | Touche émulée (Xbox) | Fonction MSFS recommandée | Type |
-| :--- | :--- | :--- | :--- | :--- |
-| **Bouton A** | `BTN_TRIGGER` | Bouton A | **Freins de roues** | Numérique |
-| **Gâchette** | `BTN_TRIGGER_HAPPY2` | Bouton A | **Freins de roues** | Numérique |
-| **Bouton B** | `BTN_THUMB` | Bouton B | *(libre)* | Numérique |
-| **Bouton X** | `BTN_THUMB2` | Bouton X | **Train d'atterrissage** | Numérique |
-| **Bouton Y** | `BTN_TOP` | Bouton Y | **Changer de vue** | Numérique |
-| **Trim pitch haut (B5)** | `BTN_TOP2` | RB + D-Pad Haut *(maintenu)* | **Trim pitch** nose up | Numérique |
-| **Trim pitch bas (B6)** | `BTN_PINKIE` | RB + D-Pad Bas *(maintenu)* | **Trim pitch** nose down | Numérique |
-| **B7 (Base manche)** | `BTN_BASE` | Bouton LB | **Rentrer les volets** | Numérique |
-| **B8 (Base manche)** | `BTN_BASE2` | Bouton B | **Sortir les volets** | Numérique |
-| **Bas gauche** | `BTN_TRIGGER_HAPPY5` | LS Click | **Réinitialiser la vue** | Numérique |
-| **Bas milieu** | `BTN_TRIGGER_HAPPY6` | Start | **Menu pause** | Numérique |
-| **Bas droit** | `BTN_TRIGGER_HAPPY7` | RS Click | *(libre)* | Numérique |
-| **Bouton Xbox** | `BTN_TRIGGER_HAPPY4` | Guide (Mode) | Caméra / guide | Numérique |
-| **B16** | `BTN_DEAD` | Select | Menu / sélection | Numérique |
+Correspondance **1:1** entre les boutons du manche et la face Xbox :
+
+| Joystick | Code evdev | Manette Xbox | MSFS suggéré |
+| :--- | :--- | :--- | :--- |
+| **A / B1** | `BTN_TRIGGER` | **A** | Freins de roues |
+| **B / B2** | `BTN_THUMB` | **B** | *(libre)* |
+| **X / B3** | `BTN_THUMB2` | **X** | Train d'atterrissage |
+| **Y / B4** | `BTN_TOP` | **Y** | Changer de vue |
+
+### Boutons B5–B8 (LB + face)
+
+Correspondance **1:1** — le démon maintient **LB** + le bouton face tant que le bouton physique est enfoncé :
+
+| Joystick | Code evdev | Manette Xbox | MSFS suggéré |
+| :--- | :--- | :--- | :--- |
+| **B5** | `BTN_TOP2` | **LB + A** | *(à assigner dans MSFS)* |
+| **B6** | `BTN_PINKIE` | **LB + B** | *(à assigner dans MSFS)* |
+| **B7** | `BTN_BASE` | **LB + X** | *(à assigner dans MSFS)* |
+| **B8** | `BTN_BASE2` | **LB + Y** | *(à assigner dans MSFS)* |
+
+### Autres boutons
+
+| Joystick | Code evdev | Manette Xbox | MSFS suggéré |
+| :--- | :--- | :--- | :--- |
+| **Gâchette** | `BTN_TRIGGER_HAPPY2` | **RB** | *(à assigner dans MSFS)* |
+| **Bouton Xbox** | `BTN_TRIGGER_HAPPY4` | **Guide (Mode)** | Bouton Xbox |
+| **Bas gauche** | `BTN_TRIGGER_HAPPY5` | **Back** (Select) | Menu / retour |
+| **Bas milieu** | `BTN_TRIGGER_HAPPY6` | LS Click | *(libre)* |
+| **Bas droit** | `BTN_TRIGGER_HAPPY7` | **Start** | Menu pause |
+| **B16** | `BTN_DEAD` | **LB** | *(à assigner dans MSFS)* |
 
 ## Règles anti-conflit
 
-1. **RB** n'est utilisé que comme modificateur du trim (B5/B6) — jamais en appui direct. Les volets sortants passent par **B** (B8 partage la touche avec le bouton B face).
-2. **RS Y** est réservé au gaz — le mini-stick vertical (`ABS_RY`) n'est pas mappé.
-3. **D-Pad** : POV libre ; pendant le trim (B5/B6), le démon impose D-Pad Haut/Bas tant que le bouton est maintenu.
+1. **B1–B4** : appui seul → A/B/X/Y (face Xbox).
+2. **B5–B8** : appui → **LB + A/B/X/Y** (combo maintenu) — LB n'est jamais émis seul.
+3. **Stick droit (RS)** : entièrement réservé au mini-stick H2 (`ABS_RX` + `ABS_RY`).
 
 ## Notes importantes de configuration
 
-1. **Torsion / palonnier :** mode `split_triggers` (LT/RT, neutre = relâché). Ajustez `deadzone` dans `config.toml` si le palonnier dérive.
-2. **Trim pitch :** maintenez **B5** ou **B6** — le démon envoie **RB + D-Pad** tant que le bouton est enfoncé. Inverser `hat_value` dans `config.toml` si le sens est mauvais.
-3. **Volets :** dans MSFS, assignez **Diminuer volets** à **LB** et **Augmenter volets** à **B**.
+1. **H2 → stick droit :** mini-stick tête = regard horizontal + vertical dans MSFS (RS X / RS Y).
+2. **Gaz :** leviers `ABS_RZ` / `ABS_THROTTLE` non mappés — configurez la poussée via clavier/souris ou profil MSFS sans axe gaz manette.
+3. **Torsion / palonnier :** mode `split_triggers` (LT/RT). Ajustez `deadzone` si le palonnier dérive.
 4. **Courbes de sensibilité :** réduisez la réactivité entre **-20 % et -35 %** sur roulis et tangage.
 
 ## Bindings MSFS (GeForce NOW)
@@ -61,15 +75,16 @@ Ce document récapitule le mapping pour transformer votre Turtle Beach VelocityO
 | :--- | :--- |
 | Ailerons / profondeur | LS |
 | Palonnier | LT / RT |
-| Gaz | RS Y |
 | Regard horizontal | RS X |
-| Regard vertical / menus | D-Pad |
-| Trim pitch ↑ / ↓ | RB + D-Pad Haut / Bas |
+| Regard vertical | RS Y |
+| Menus / raccourcis | D-Pad (H1) |
 | Freins roues | A |
 | Train | X |
 | Changer vue | Y |
-| Volets − | LB |
-| Volets + | B |
+| B5 / B6 / B7 / B8 | LB+A / LB+B / LB+X / LB+Y |
+| Bouton Xbox | Guide |
+| Back | Select (bas gauche) |
+| Start | Start (bas droit) |
 
 ## Implémentation AirTux One
 
@@ -77,8 +92,7 @@ Ce mapping est appliqué dans [`config.toml`](config.toml), section `[virtual_co
 
 | Mode TOML | Usage |
 | :--- | :--- |
-| `centered` | Manche, mini-stick |
+| `centered` | Manche, mini-stick H2 |
 | `split_triggers` | Torsion → LT/RT |
-| `linear_positive` | Levier de gaz |
-| `dpad_hold` | Trim B5/B6 → RB + D-Pad maintenu |
-| `passthrough` | POV / D-Pad |
+| `modifier_hold` | B5–B8 → LB + bouton face maintenu |
+| `passthrough` | POV H1 / D-Pad |

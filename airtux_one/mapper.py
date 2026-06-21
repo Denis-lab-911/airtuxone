@@ -38,6 +38,9 @@ class MappingRule:
     impulse_hat_down: int = 1
     impulse_threshold: int = 256
     impulse_hat_value: int | None = None
+    # linear_positive / linear_trigger : bornes source optionnelles (calibration repos / plein)
+    range_min: int | None = None
+    range_max: int | None = None
 
 
 @dataclass(frozen=True)
@@ -89,6 +92,13 @@ def _resolve_ecode(name: str, category: str) -> int:
     return code
 
 
+def _parse_axis_range(entry: dict[str, Any]) -> tuple[int | None, int | None]:
+    """Bornes source optionnelles (input_min / input_max ou range_min / range_max)."""
+    rmin = entry.get("input_min", entry.get("range_min"))
+    rmax = entry.get("input_max", entry.get("range_max"))
+    return (int(rmin) if rmin is not None else None, int(rmax) if rmax is not None else None)
+
+
 def _parse_axis_entry(source_name: str, entry: Any) -> tuple[str, str, bool, int, str]:
     """Normalise une entrée d'axe TOML (table ou chaîne cible seule)."""
     if isinstance(entry, str):
@@ -98,7 +108,7 @@ def _parse_axis_entry(source_name: str, entry: Any) -> tuple[str, str, bool, int
         if not target:
             raise ConfigError(f"Axis {source_name!r} missing 'target'")
         mode = str(entry.get("mode", "passthrough"))
-        if mode not in ("centered", "linear", "linear_positive", "passthrough", "split_triggers", "centered_trigger"):
+        if mode not in ("centered", "linear", "linear_positive", "linear_trigger", "passthrough", "split_triggers", "centered_trigger"):
             raise ConfigError(f"Axis {source_name!r}: invalid mode {mode!r}")
         return (
             source_name,
@@ -116,7 +126,7 @@ def _parse_button_entry(source_name: str, entry: Any) -> str | dict:
         return entry
     if isinstance(entry, dict):
         mode = entry.get("mode", "passthrough")
-        if mode in ("trim_pulse", "dpad_hold"):
+        if mode in ("trim_pulse", "dpad_hold", "modifier_hold"):
             return entry
     raise ConfigError(f"Invalid button entry for {source_name!r}: {entry!r}")
 
@@ -245,6 +255,9 @@ class EventMapper:
                         f"Duplicate axis mapping for {src!r} "
                         f"(controller {ctrl_num} vs existing)"
                     )
+                rmin, rmax = (None, None)
+                if isinstance(entry, dict):
+                    rmin, rmax = _parse_axis_range(entry)
                 self._lookup[key] = MappingRule(
                     controller_index=ctrl_index,
                     target_type=ecodes.EV_ABS,
@@ -252,6 +265,8 @@ class EventMapper:
                     invert=invert,
                     deadzone=deadzone,
                     mode=mode,
+                    range_min=rmin,
+                    range_max=rmax,
                 )
 
             for source_name, entry in mapping.get("buttons", {}).items():
@@ -289,6 +304,22 @@ class EventMapper:
                         mode="dpad_hold",
                         impulse_modifier_code=mod_code,
                         impulse_hat_value=int(entry.get("hat_value", -1)),
+                    )
+                    continue
+
+                if isinstance(entry, dict) and entry.get("mode") == "modifier_hold":
+                    modifier = entry.get("modifier_button", "BTN_TL")
+                    target_btn = entry.get("target_button")
+                    if not target_btn:
+                        raise ConfigError(
+                            f"Button {source_name!r}: modifier_hold requires target_button"
+                        )
+                    self._lookup[key] = MappingRule(
+                        controller_index=ctrl_index,
+                        target_type=ecodes.EV_KEY,
+                        target_code=_resolve_ecode(target_btn, "button"),
+                        mode="modifier_hold",
+                        impulse_modifier_code=_resolve_ecode(modifier, "button"),
                     )
                     continue
 
@@ -344,21 +375,37 @@ class EventMapper:
             return int(max(-32768, min(32767, delta * 32767 // half)))
 
         if rule.mode == "linear":
-            span = max(src_max - src_min, 1)
-            ratio = (value - src_min) / span
+            i_min, i_max, span = self._source_span(rule, absinfo)
+            ratio = max(0.0, min(1.0, (value - i_min) / span))
             if rule.invert:
                 ratio = 1.0 - ratio
             return int(-32768 + ratio * 65535)
 
         if rule.mode == "linear_positive":
-            # Levier 0%→100% (repos=min, plein=max) — adapté gaz / MSFS
-            span = max(src_max - src_min, 1)
-            ratio = (value - src_min) / span
+            i_min, i_max, span = self._source_span(rule, absinfo)
+            ratio = max(0.0, min(1.0, (value - i_min) / span))
             if rule.invert:
                 ratio = 1.0 - ratio
-            return int(max(0, min(32767, ratio * 32767)))
+            return int(ratio * 32767)
+
+        if rule.mode == "linear_trigger":
+            i_min, i_max, span = self._source_span(rule, absinfo)
+            ratio = max(0.0, min(1.0, (value - i_min) / span))
+            if rule.invert:
+                ratio = 1.0 - ratio
+            return int(ratio * 255)
 
         return value
+
+    def _source_span(
+        self,
+        rule: MappingRule,
+        absinfo: Any,
+    ) -> tuple[int, int, int]:
+        """Retourne (min, max, span) effectifs pour la calibration source."""
+        src_min = rule.range_min if rule.range_min is not None else absinfo.min
+        src_max = rule.range_max if rule.range_max is not None else absinfo.max
+        return src_min, src_max, max(src_max - src_min, 1)
 
     def transform_split_triggers(
         self,
@@ -380,6 +427,9 @@ class EventMapper:
             return 0, 0
 
         pressure = int(min(255, abs(delta) * 255 // half))
+        # Seuil bas : évite LT+RT fantômes au repos
+        if pressure < 8:
+            return 0, 0
         if delta < 0:
             return pressure, 0
         if delta > 0:

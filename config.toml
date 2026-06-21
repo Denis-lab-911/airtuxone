@@ -32,35 +32,31 @@ product_id = 0x02A1
 # Manche — ailerons / profondeur
 ABS_X = { target = "ABS_X", invert = false, deadzone = 4096, mode = "centered" }
 ABS_Y = { target = "ABS_Y", invert = false, deadzone = 4096, mode = "centered" }
-# Torsion — palonnier (LT gauche / RT droite)
-ABS_Z = { target_left = "ABS_Z", target_right = "ABS_RZ", invert = false, deadzone = 4096, mode = "split_triggers" }
-# Mini-stick tête — regard horizontal
+# Torsion manche → palonnier : gauche = LT, droite = RT (gâchettes analogiques)
+ABS_Z = { target_left = "ABS_Z", target_right = "ABS_RZ", invert = false, deadzone = 8192, mode = "split_triggers" }
+# Mini-stick H2 — stick droit complet (regard / caméra)
 ABS_RX = { target = "ABS_RX", invert = false, deadzone = 4096, mode = "centered" }
-# Gaz — manette gauche → stick droit vertical
-ABS_RZ = { target = "ABS_RY", invert = false, deadzone = 0, mode = "linear_positive" }
+ABS_RY = { target = "ABS_RY", invert = false, deadzone = 4096, mode = "centered" }
 # POV H1 — croix directionnelle
 ABS_HAT0X = { target = "ABS_HAT0X", invert = false, deadzone = 0, mode = "passthrough" }
 ABS_HAT0Y = { target = "ABS_HAT0Y", invert = false, deadzone = 0, mode = "passthrough" }
-# ABS_RUDDER (molette trim) : non mappé — trim via B5/B6
-# ABS_RY (H2 vertical) : non mappé — RS Y réservé au gaz ; regard vertical via POV
-# ABS_THROTTLE (levier droit) : non mappé — MSFS gamepad = un seul axe gaz
+# ABS_RZ / ABS_THROTTLE (leviers gaz) : non mappés
 
 [virtual_controller_2.mapping.buttons]
-# Face manche
-BTN_TRIGGER         = "BTN_SOUTH"    # A — freins roues
-BTN_THUMB           = "BTN_EAST"     # B — libre
-BTN_THUMB2          = "BTN_WEST"     # X — train
-BTN_TOP             = "BTN_NORTH"    # Y — changer de vue
-BTN_TRIGGER_HAPPY2  = "BTN_SOUTH"    # gâchette → A
-# Trim pitch — RB réservé modificateur (pas d'appui RB direct ailleurs)
-BTN_TOP2            = { mode = "dpad_hold", modifier_button = "BTN_TR", hat = "ABS_HAT0Y", hat_value = -1 }
-BTN_PINKIE          = { mode = "dpad_hold", modifier_button = "BTN_TR", hat = "ABS_HAT0Y", hat_value = 1 }
-# Base manche — B7/B8
-BTN_BASE            = "BTN_TL"       # volets rentrer
-BTN_BASE2           = "BTN_EAST"     # B8 — volets sortir (partage B avec face)
+# Face manche — correspondance 1:1 A/B/X/Y (B1–B4)
+BTN_TRIGGER         = "BTN_SOUTH"    # A / B1 → A
+BTN_THUMB           = "BTN_EAST"     # B / B2 → B
+BTN_THUMB2          = "BTN_X"        # X / B3 → X
+BTN_TOP             = "BTN_Y"        # Y / B4 → Y
+BTN_TRIGGER_HAPPY2  = "BTN_TR"     # gâchette → RB
+# B5–B8 — LB + face (maintenu pendant l'appui)
+BTN_TOP2            = { mode = "modifier_hold", modifier_button = "BTN_TL", target_button = "BTN_SOUTH" }   # B5 → LB+A
+BTN_PINKIE          = { mode = "modifier_hold", modifier_button = "BTN_TL", target_button = "BTN_EAST" }  # B6 → LB+B
+BTN_BASE            = { mode = "modifier_hold", modifier_button = "BTN_TL", target_button = "BTN_WEST" }    # B7 → LB+X
+BTN_BASE2           = { mode = "modifier_hold", modifier_button = "BTN_TL", target_button = "BTN_NORTH" }   # B8 → LB+Y
 # Base plateau
-BTN_TRIGGER_HAPPY5  = "BTN_THUMBL"   # bas gauche — réinitialiser la vue
-BTN_TRIGGER_HAPPY6  = "BTN_START"    # bas milieu — menu pause
-BTN_TRIGGER_HAPPY7  = "BTN_THUMBR"   # bas droit — libre
-BTN_TRIGGER_HAPPY4  = "BTN_MODE"     # bouton Xbox
-BTN_DEAD            = "BTN_SELECT"   # B16 — sélection / menu
+BTN_TRIGGER_HAPPY5  = "BTN_SELECT"   # bas gauche → Back
+BTN_TRIGGER_HAPPY6  = "BTN_THUMBL"   # bas milieu — libre
+BTN_TRIGGER_HAPPY7  = "BTN_START"    # bas droit → Start
+BTN_TRIGGER_HAPPY4  = "BTN_MODE"     # bouton Xbox → Guide Xbox
+BTN_DEAD            = "BTN_TL"       # B16 → LB

@@ -119,6 +119,9 @@ class AirTuxDaemon:
             elif rule.mode == "centered_trigger":
                 trig = self._mapper.transform_centered_trigger(rule, value, absinfo)
                 controller.emit_analog_trigger(rule.target_code, trig)
+            elif rule.mode == "linear_trigger":
+                trig = self._mapper.transform_value(rule, value, absinfo)
+                controller.emit_analog_trigger(rule.target_code, trig)
             else:
                 value = self._mapper.transform_value(rule, value, absinfo)
                 controller.emit_abs(rule.target_code, value)
@@ -138,6 +141,13 @@ class AirTuxDaemon:
                     hat_val,
                     bool(value),
                     rule.impulse_modifier_code,
+                )
+                return
+            if rule.mode == "modifier_hold" and rule.impulse_modifier_code is not None:
+                controller.emit_modifier_hold(  # type: ignore[attr-defined]
+                    rule.impulse_modifier_code,
+                    rule.target_code,
+                    bool(value),
                 )
                 return
             key_val = 1 if value else 0

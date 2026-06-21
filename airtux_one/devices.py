@@ -99,11 +99,13 @@ class VirtualController:
         self._device.write(ecodes.EV_ABS, code, value)
 
     def emit_split_triggers(self, lt: int, rt: int) -> None:
-        """LT/RT analogiques + TL2/TR2 pour gamepad-tester / Chrome."""
+        """LT/RT analogiques uniquement (ABS_Z / ABS_RZ).
+
+        TL2/TR2 ne sont pas émis ici : leur duplication faisait apparaître
+        2 boutons pressés dans gamepad-tester / MSFS pour une seule gâchette.
+        """
         self.emit_abs(ecodes.ABS_Z, lt)
         self.emit_abs(ecodes.ABS_RZ, rt)
-        self.emit_key(ecodes.BTN_TL2, min(lt, 255))
-        self.emit_key(ecodes.BTN_TR2, min(rt, 255))
 
     def emit_analog_trigger(self, code: int, value: int) -> None:
         """Une gâchette analogique + bouton TL2/TR2 associé."""
@@ -157,6 +159,18 @@ class VirtualController:
         )
         if dpad_btn:
             self.emit_key(dpad_btn, val)
+        self.syn()
+
+    def emit_modifier_hold(
+        self,
+        modifier: int,
+        button: int,
+        pressed: bool,
+    ) -> None:
+        """Modificateur + bouton face maintenus tant que le bouton source est enfoncé."""
+        val = 1 if pressed else 0
+        self.emit_key(modifier, val)
+        self.emit_key(button, val)
         self.syn()
 
     def syn(self) -> None:

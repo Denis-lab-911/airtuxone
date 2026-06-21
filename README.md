@@ -127,6 +127,17 @@ L'outil affiche :
 - en direct chaque `[AXE]` ou `[BTN]` quand vous actionnez un contrôle ;
 - à la fin (Ctrl+C) un **résumé** avec plages min/max et un extrait `config.toml` suggéré.
 
+### Construire un mapping joystick ↔ manette Xbox (assistant)
+
+Si vous avez une manette Xbox **physique**, vous pouvez “apprendre” un mapping en associant un contrôle du joystick puis le contrôle correspondant sur la manette :
+
+```bash
+source .venv/bin/activate
+python -m airtux_one.learn
+```
+
+Le script affiche une proposition à chaque étape et imprime un extrait TOML à copier dans `config.toml`.
+
 **Méthode manuelle avec evtest :**
 
 Le VelocityOne est identifié par **vendor `10f5`** et **product `7055`**. Sous Linux Mint, il apparaît souvent comme **`Generic X-Box pad`** (pilote xpad ou Steam Input), pas sous son nom commercial.
