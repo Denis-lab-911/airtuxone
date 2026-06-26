@@ -52,3 +52,4 @@ airtuxone/
 | 2026-06-20 | Gaz non mappé ; H2 (ABS_RX/RY) → stick droit complet |
 | 2026-06-20 | Palonnier : LT/RT analogiques seuls (sans TL2/TR2), deadzone 8192, seuil pression 8 |
 | 2026-06-20 | Script `airtuxone.sh` — lancement du démon (`python -m airtux_one.core`) |
+| 2026-06-22 | Revert mapping gaz 2ᵉ manette (GFN/MSFS ne voit qu'une manette) |

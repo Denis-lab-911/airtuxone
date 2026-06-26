@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="airtuxone_logo.png" alt="AirTux One" width="240">
+</p>
+
 # AirTux One
 
 Démon Linux qui lit un **TurtleBeach VelocityOne Flightstick** via `evdev` et émet vers une **manette Xbox 360 virtuelle** via `uinput`. Conçu pour Google Chrome et GeForce NOW afin de piloter Microsoft Flight Simulator avec le manche, les gaz et les boutons du stick.

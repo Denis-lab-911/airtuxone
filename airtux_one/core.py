@@ -73,6 +73,12 @@ class AirTuxDaemon:
                 exc,
             )
             return 1
+        except OSError as exc:
+            if "Device or resource busy" in str(exc) or exc.errno == 16:
+                logger.error("Cannot grab source device: %s", exc)
+            else:
+                logger.error("%s", exc)
+            return 1
 
         self._running = True
         try:

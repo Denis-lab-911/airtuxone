@@ -204,7 +204,13 @@ class DeviceManager:
             self.source.name,
         )
         if self._grab_source:
-            self.source.grab()
+            try:
+                self.source.grab()
+            except OSError as exc:
+                raise OSError(
+                    f"{exc} on {self.source.path} — fermez jstest/evtest et les "
+                    "onglets Chrome (gamepad-tester, GeForce NOW), puis relancez le démon"
+                ) from exc
             logger.info("Source device grabbed (exclusive access)")
 
         self.controllers = {}
