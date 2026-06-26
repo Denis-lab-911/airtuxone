@@ -10,7 +10,9 @@ Développer un démon Linux (AirTux One) qui intercepte les entrées d'un Turtle
 airtuxone/
 ├── agent.md
 ├── config.toml           # Mapping TOML (section virtual_controller_2)
-├── mapping_velocityone_xbox.md
+├── docs/
+│   ├── en/mapping_velocityone_xbox.md
+│   └── fr/mapping_velocityone_xbox.md
 ├── requirements.txt
 ├── setup.sh
 ├── README.md
@@ -26,7 +28,7 @@ airtuxone/
 - Mapping 100 % externe via `config.toml` (aucun code en dur).
 - Lookup O(1) : dictionnaires inversés au démarrage dans `mapper.py`.
 - Permissions Linux : groupes `input` et `uinput`, module noyau `uinput`.
-- Mapping MSFS : voir `mapping_velocityone_xbox.md`.
+- Mapping MSFS : voir `docs/fr/mapping_velocityone_xbox.md`.
 
 ## [Tâches Réalisées]
 
@@ -35,7 +37,7 @@ airtuxone/
 - [x] Mapping MSFS VelocityOne → Xbox (`config.toml`, modes `split_triggers`, `dpad_hold`, `linear_positive`)
 - [x] Trim pitch via B5/B6 (`BTN_TOP2`, `BTN_PINKIE`) → RB + D-Pad maintenu
 - [x] Contournement Chrome : masquage js0 physique (udev), sélection manette **AirTux One** dans le navigateur
-- [x] Documentation : `README.md`, `mapping_velocityone_xbox.md`
+- [x] Documentation : `README.md`, `README.fr.md`, `docs/en/`, `docs/fr/`
 
 ## [Tâches Restantes]
 
@@ -53,3 +55,5 @@ airtuxone/
 | 2026-06-20 | Palonnier : LT/RT analogiques seuls (sans TL2/TR2), deadzone 8192, seuil pression 8 |
 | 2026-06-20 | Script `airtuxone.sh` — lancement du démon (`python -m airtux_one.core`) |
 | 2026-06-22 | Revert mapping gaz 2ᵉ manette (GFN/MSFS ne voit qu'une manette) |
+| 2026-06-22 | Publication OSS : doc bilingue (README EN/FR, docs/en, docs/fr, CONTRIBUTING) |
+| 2026-06-22 | config.toml : commentaires en anglais |

@@ -2,28 +2,36 @@
   <img src="airtuxone_logo.png" alt="AirTux One" width="240">
 </p>
 
+<p align="center">
+  <strong>English</strong> | <a href="README.fr.md">Français</a>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3"></a>
+</p>
+
 # AirTux One
 
-Démon Linux qui lit un **TurtleBeach VelocityOne Flightstick** via `evdev` et émet vers une **manette Xbox 360 virtuelle** via `uinput`. Conçu pour Google Chrome et GeForce NOW afin de piloter Microsoft Flight Simulator avec le manche, les gaz et les boutons du stick.
+Linux daemon that reads a **Turtle Beach VelocityOne Flightstick** via `evdev` and emits a **virtual Xbox 360 controller** via `uinput`. Built for Google Chrome and GeForce NOW to fly Microsoft Flight Simulator with the stick and its buttons.
 
-## Installation rapide
+## Quick install
 
 ```bash
 git clone https://github.com/Denis-lab-911/airtuxone.git
 cd airtuxone
-chmod +x setup.sh
+chmod +x setup.sh airtuxone.sh
 ./setup.sh
 ```
 
-Le script `setup.sh` automatise :
+The `setup.sh` script automates:
 
-- installation des paquets système (`python3-venv`, `evtest`, …)
-- création du venv `.venv/` et installation des dépendances Python
-- chargement persistant du module noyau `uinput`
-- ajout de l'utilisateur aux groupes `input` et `uinput`
-- installation optionnelle des règles udev pour le VelocityOne
+- system packages (`python3-venv`, `evtest`, …)
+- `.venv/` creation and Python dependencies
+- persistent `uinput` kernel module loading
+- adding your user to the `input` and `uinput` groups
+- optional udev rules for the VelocityOne
 
-**Important :** si les groupes ont été modifiés, déconnectez-vous et reconnectez-vous (ou redémarrez) avant de lancer le démon.
+**Important:** log out and back in (or reboot) after group changes before starting the daemon.
 
 ### Diagnostics
 
@@ -31,33 +39,28 @@ Le script `setup.sh` automatise :
 ./setup.sh --check
 ```
 
-### Ignorer l'installation apt
+### Skip apt install
 
-Si le Gestionnaire de mises à jour Mint (`aptk`) bloque apt :
+If Mint's update manager locks apt:
 
 ```bash
 ./setup.sh --skip-apt
 ```
 
-Le script attendra sinon jusqu'à 2 minutes que le verrou apt soit libéré.
-
-Si `apt-get update` échoue à cause d'un **dépôt tiers** (`NO_PUBKEY`), ce n'est pas lié à AirTux One. Le script tente d'abord l'installation **sans** `apt update`. Sinon :
+If `apt-get update` fails due to a third-party repo (`NO_PUBKEY`):
 
 ```bash
 sudo apt install python3-venv python3-pip evtest
 ./setup.sh --skip-apt
 ```
 
-### Ignorer les règles udev
+### Skip udev rules
 
 ```bash
 ./setup.sh --skip-udev
 ```
 
-
-## Installation manuelle
-
-Si vous préférez ne pas utiliser le script :
+## Manual install
 
 ```bash
 sudo apt install python3-venv python3-pip evtest
@@ -67,158 +70,65 @@ pip install -r requirements.txt
 sudo modprobe uinput
 echo uinput | sudo tee /etc/modules-load.d/uinput.conf
 sudo usermod -aG input,uinput $USER
-# Reconnexion requise après modification des groupes
+# Log out and back in after group changes
 ```
 
 ## Configuration
 
-Tout le mapping est défini dans [`config.toml`](config.toml). **Aucun axe ou bouton n'est codé en dur dans le Python.**
+All mapping lives in [`config.toml`](config.toml). **No axis or button is hardcoded in Python.**
 
-### Structure
-
-| Section | Rôle |
+| Section | Role |
 |---------|------|
-| `[source_device]` | Critères de détection du flightstick (nom, vendor, product) |
-| `[daemon]` | Options du démon (`grab_source`, `log_level`) |
-| `[virtual_controller_2]` | Manette virtuelle **AirTux One** — mapping complet (axes, boutons) |
+| `[source_device]` | Source flightstick detection (name, vendor, product) |
+| `[daemon]` | Daemon options (`grab_source`, `log_level`) |
+| `[virtual_controller_1]` | Technical decoy controller (Chrome) — no mappings |
+| `[virtual_controller_2]` | **AirTux One** virtual controller — full mapping |
 
-Le mapping MSFS validé est documenté dans [`mapping_velocityone_xbox.md`](mapping_velocityone_xbox.md).
+MSFS mapping is documented in [`docs/en/mapping_velocityone_xbox.md`](docs/en/mapping_velocityone_xbox.md).
 
-### Mode PC obligatoire (axes des gaz)
+### PC mode required
 
-Le VelocityOne démarre en **mode Xbox** par défaut. Sous Linux, le noyau charge alors le pilote **`xpad`** et le stick apparaît comme **`Generic X-Box pad`**.
+The VelocityOne ships in **Xbox mode**. Under Linux, the **`xpad`** driver exposes throttle levers as discrete values only (`0`, `1`, `32768`). **Switch to PC mode** on the stick OLED (Configurator → Input Mode → PC), then verify with `./setup.sh --check` and `evtest`.
 
-Dans ce mode, les leviers de gaz sont mappés sur les **gâchettes Xbox** (`ABS_Z`, `ABS_RZ`) et ne reportent que des valeurs discrètes :
-
-| Position du levier | Valeurs evtest typiques |
-|--------------------|-------------------------|
-| Repos / milieu     | `0` (aucun événement intermédiaire) |
-| Léger déplacement  | `1`, `2` |
-| À fond             | `32768` |
-
-C'est le comportement que vous observez : **evtest ne réagit qu'aux extrêmes**, pas en analogique continu. AirTux One ne peut pas reconstruire une précision que le noyau ne fournit pas.
-
-**Passer en mode PC** (mémorisé sur le stick) :
-
-1. Brancher le stick en USB
-2. **Tourner** la molette Configurator (OLED)
-3. **Clic droit** sur la molette → **Input Mode**
-4. **Tourner** pour sélectionner **PC**
-5. **Clic** sur la molette pour confirmer
-
-Vérifier ensuite :
-
-```bash
-./setup.sh --check
-evtest
-```
-
-En mode PC, le device ne devrait **plus** s'appeler « Generic X-Box pad » et les leviers de gaz devraient produire une plage continue (ex. `-32768` … `32767`) sur leurs axes `ABS_*`.
-
-### Découvrir le device et les codes evdev
-
-**Outil recommandé — assistant de découverte AirTux One :**
+### Discover evdev codes
 
 ```bash
 source .venv/bin/activate
 python -m airtux_one.discover
 ```
 
-Fermez `evtest` avant de lancer l'outil (un seul lecteur à la fois).
-
-L'outil affiche :
-- la liste des axes/boutons disponibles au démarrage ;
-- en direct chaque `[AXE]` ou `[BTN]` quand vous actionnez un contrôle ;
-- à la fin (Ctrl+C) un **résumé** avec plages min/max et un extrait `config.toml` suggéré.
-
-### Construire un mapping joystick ↔ manette Xbox (assistant)
-
-Si vous avez une manette Xbox **physique**, vous pouvez “apprendre” un mapping en associant un contrôle du joystick puis le contrôle correspondant sur la manette :
+Mapping assistant with a physical Xbox controller:
 
 ```bash
-source .venv/bin/activate
 python -m airtux_one.learn
 ```
 
-Le script affiche une proposition à chaque étape et imprime un extrait TOML à copier dans `config.toml`.
-
-**Méthode manuelle avec evtest :**
-
-Le VelocityOne est identifié par **vendor `10f5`** et **product `7055`**. Sous Linux Mint, il apparaît souvent comme **`Generic X-Box pad`** (pilote xpad ou Steam Input), pas sous son nom commercial.
-
-**Étape 1 — Trouver le numéro `event*` :**
+Alternate config path:
 
 ```bash
-# Méthode interactive (recommandée)
-evtest
-# Choisir l'entrée « Generic X-Box pad » ou vendor 10f5:7055 dans la liste
-
-# Ou lister tous les devices avec leur nom
-grep -H . /sys/class/input/event*/device/name
-
-# Ou repérer le VelocityOne par vendor/product
-for d in /sys/class/input/event*/device/id_vendor; do
-  v=$(cat "$d"); p=$(cat "${d%/*}/id_product")
-  [[ "${v,,}" == "10f5" && "${p,,}" == "7055" ]] && \
-    echo "/dev/input/$(basename $(dirname $(dirname $d)))  $(cat ${d%/*}/name)"
-done
+export AIRTUX_CONFIG=/path/to/config.toml
 ```
 
-**Étape 2 — Tester avec le chemin réel** (remplacez `21` par votre numéro) :
+## Running the daemon
 
 ```bash
-evtest /dev/input/event21
+./airtuxone.sh
 ```
 
-Ne pas taper littéralement `eventN` — `N` est un placeholder pour le numéro affiché à l'étape 1.
-
-**Étape 3 — Calibrer le mapping**
-
-Déplacez le manche, le throttle et appuyez sur les boutons. Notez les codes `ABS_*` et `BTN_*` affichés, puis mettez à jour `config.toml`.
-
-### Détection dans `config.toml`
-
-Par défaut, seuls `vendor_id` et `product_id` sont utilisés (`name = ""`). Pour filtrer aussi par nom :
-
-```toml
-[source_device]
-name = "Generic X-Box pad"
-vendor_id = 0x10F5
-product_id = 0x7055
-```
-
-Exemple d'entrée d'axe :
-
-```toml
-[virtual_controller_2.mapping.axes]
-ABS_X = { target = "ABS_X", invert = false, deadzone = 4096, mode = "centered" }
-```
-
-Exemple d'entrée bouton :
-
-```toml
-[virtual_controller_2.mapping.buttons]
-BTN_TRIGGER = "BTN_SOUTH"
-```
-
-Chemin alternatif du fichier de config :
-
-```bash
-export AIRTUX_CONFIG=/chemin/vers/config.toml
-```
-
-## Lancement
+Or manually:
 
 ```bash
 source .venv/bin/activate
 python -m airtux_one.core
 ```
 
-Arrêt propre : `Ctrl+C` ou `kill -TERM <pid>`.
+Clean shutdown: `Ctrl+C` or `kill -TERM <pid>`.
 
-## Service systemd (utilisateur)
+**GeForce NOW order:** start the daemon **before** opening Chrome / GeForce NOW.
 
-Créez `~/.config/systemd/user/airtux-one.service` :
+## User systemd service
+
+Create `~/.config/systemd/user/airtux-one.service`:
 
 ```ini
 [Unit]
@@ -226,136 +136,76 @@ Description=AirTux One flight stick mapper
 After=graphical-session.target
 
 [Service]
-ExecStart=/chemin/vers/airtuxone/.venv/bin/python -m airtux_one.core
-WorkingDirectory=/chemin/vers/airtuxone
+ExecStart=/path/to/airtuxone/.venv/bin/python -m airtux_one.core
+WorkingDirectory=/path/to/airtuxone
 Restart=on-failure
-Environment=AIRTUX_CONFIG=/chemin/vers/airtuxone/config.toml
+Environment=AIRTUX_CONFIG=/path/to/airtuxone/config.toml
 
 [Install]
 WantedBy=default.target
 ```
 
-Activation :
+## Verification
+
+### Virtual controller (evtest / jstest)
 
 ```bash
-systemctl --user daemon-reload
-systemctl --user enable --now airtux-one.service
-systemctl --user status airtux-one.service
+evtest    # select « AirTux One »
+jstest /dev/input/jsN
 ```
 
-## Vérification
+### Browser (GeForce NOW / Chrome)
 
-### 1. Manette virtuelle créée (evtest)
+1. Start the daemon first
+2. Use **Google Chrome** (not Chromium/Brave)
+3. Select **AirTux One** (`vendor 045e`, `product 02a1`) in the tester or MSFS
 
-Après avoir lancé le démon (`python -m airtux_one.core`) :
+## Troubleshooting
 
-```bash
-evtest
-# Choisir « AirTux One »
-```
+| Issue | Fix |
+|-------|-----|
+| `Device or resource busy` on startup | Close jstest/evtest and Chrome tabs (gamepad-tester, GFN); restart `./airtuxone.sh` |
+| `Permission denied` on `/dev/input/*` | `./setup.sh` or `sudo usermod -aG input $USER` + re-login |
+| `Permission denied` on `/dev/uinput` | `./setup.sh` + re-login |
+| Source device not found | Plug in VelocityOne; `./setup.sh --check`; **PC mode** on stick |
+| Throttle not analog (evtest: 0, 1, 32768) | Xbox mode active — switch to **PC mode** |
+| Wrong controller in browser | Select **AirTux One** (`045e:02a1`) |
+| Wrong axis codes | `python -m airtux_one.discover` then update `config.toml` |
 
-Ou lister les devices :
+## Security
 
-```bash
-grep -H . /sys/class/input/event*/device/name | grep -i airtux
-```
+- Do **not** run the daemon as root.
+- Use the `input` and `uinput` groups as intended.
+- Exclusive grab (`grab_source`) blocks other readers of the physical stick.
 
-### 2. Test dans le navigateur (GeForce NOW / Chrome)
-
-`chrome://gamepad-internals/` n'est **pas toujours accessible** (Chromium, Brave, certaines versions de Chrome). Alternatives :
-
-| Méthode | Comment |
-|---------|---------|
-| **Testeur web** | [gamepad-tester.com](https://gamepad-tester.com/) — appuyez sur un bouton pour activer la détection |
-| **jstest-gtk** | `sudo apt install jstest-gtk` → interface graphique |
-| **jstest** | `jstest /dev/input/jsN` (numéro du device virtuel) |
-
-Sur le testeur web : sélectionnez l'entrée **« AirTux One »** (souvent la 3ᵉ manette listée sous Chrome/Linux, après le stick physique).
-
-**Repérer la bonne manette :**
-
-| Indice | Nom typique | Utilisation |
-|--------|-------------|-------------|
-| 1 | Stick physique | Ne réagit pas (grab evdev) — normal |
-| 2–3 | Autres entrées | **Choisir « AirTux One »** (`vendor 045e`, `product 02a1`) |
-
-**Masquer js0** (optionnel, réduit la confusion avec le stick physique) :
-
-```bash
-./setup.sh --skip-apt    # règle udev TAG-=uaccess
-# Débranchez/rebranchez le VelocityOne
-```
-
-Le démon lit toujours le stick via **evdev** (`event21`), pas via `js0`.
-
-**Dépannage général :**
-
-1. **Google Chrome** (pas Chromium/Brave) — le Gamepad API y est le plus fiable sous Linux
-2. **Onglet actif** : cliquez dans la page, puis **bougez le manche physique** ou appuyez sur un bouton du VelocityOne (les manettes virtuelles ne bougent que via le démon)
-3. **Démon lancé** : `python -m airtux_one.core` doit tourner dans un terminal
-4. **Test local d'abord** :
-   ```bash
-   jstest /dev/input/js2   # ou le jsN d'AirTux One — Ctrl+C pour quitter
-   ```
-   Si `jstest` réagit au manche physique mais pas le navigateur, fermez et rouvrez l'onglet du testeur après avoir bougé le stick
-5. **Chrome Flatpak** : accès `/dev/input` parfois bloqué — préférez le `.deb` officiel
-
-### 3. Test GeForce NOW
-
-1. Démon AirTux One lancé **avant** d'ouvrir GeForce NOW
-2. Ouvrir GeForce NOW dans **Google Chrome** (recommandé pour le Gamepad API)
-3. Lancer un jeu compatible manette
-4. Dans les réglages du jeu / GeForce NOW, sélectionner la manette **AirTux One**
-
-### 4. Mapping axe par axe
-
-```bash
-evtest /dev/input/eventN   # N = numéro de la manette virtuelle AirTux One
-```
-
-Bouger le manche physique → observer les axes sur la bonne manette virtuelle.
-
-## Dépannage
-
-| Problème | Solution |
-|----------|----------|
-| `Permission denied` sur `/dev/input/*` | `./setup.sh` ou `sudo usermod -aG input $USER` + reconnexion |
-| `Permission denied` sur `/dev/uinput` | `./setup.sh` (crée le groupe `uinput` + udev) ou reconnexion après setup |
-| Groupe `uinput` inexistant | Normal sur Mint — `./setup.sh` le crée automatiquement |
-| Device source introuvable | Brancher le VelocityOne ; `./setup.sh --check` ; vérifier `vendor_id`/`product_id` dans `config.toml` |
-| Gaz / throttle sans précision (evtest : 0, 1, 32768) | Stick en **mode Xbox** — passer en **mode PC** (section ci-dessus) |
-| Stick vu comme « Generic X-Box pad » | Mode Xbox actif — passer en mode PC sur l'OLED du stick |
-| Position vide / mauvaise manette dans le navigateur | Choisir **AirTux One** (`045e:02a1`) ; `./setup.sh --skip-apt` puis replug USB pour masquer js0 |
-| gamepad-tester ne réagit pas | Chrome (pas Brave) ; onglet actif ; démon lancé ; `jstest` sur le js virtuel |
-| Double entrée / conflit Steam | `grab_source = true` dans `[daemon]` (valeur par défaut) |
-| Codes d'axes incorrects | `python -m airtux_one.discover` puis mettre à jour `config.toml` |
-| `apt` lock / `aptk` en cours | Fermer le Gestionnaire de mises à jour Mint, attendre, ou `./setup.sh --skip-apt` |
-| `apt-get update` / `NO_PUBKEY` (dépôt tiers) | Relancer `./setup.sh` (installe sans update) ou `./setup.sh --skip-apt` |
-
-## Sécurité
-
-- Ne **pas** lancer le démon en root.
-- Utiliser les groupes `input` et `uinput` comme prévu.
-- Le grab exclusif (`grab_source`) empêche les autres apps de lire le flightstick physique pendant que le démon tourne.
-
-## Arborescence
+## Project layout
 
 ```
 airtuxone/
-├── agent.md
+├── airtuxone_logo.png
+├── airtuxone.sh
 ├── config.toml
-├── mapping_velocityone_xbox.md
+├── CONTRIBUTING.md
+├── docs/
+│   ├── en/mapping_velocityone_xbox.md
+│   └── fr/mapping_velocityone_xbox.md
+├── LICENSE
+├── README.md
+├── README.fr.md
 ├── requirements.txt
 ├── setup.sh
-├── README.md
 └── airtux_one/
-    ├── __init__.py
     ├── core.py
     ├── devices.py
     ├── discover.py
+    ├── learn.py
     └── mapper.py
 ```
 
-## Licence
+## License
 
-Usage personnel — projet AirTux One.
+This project is licensed under the [GNU General Public License v3.0](LICENSE) (GPL-3.0).
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
