@@ -1,0 +1,75 @@
+[metadata]
+name = "AirTux One Triple"
+version = "0.1.0"
+
+[source_device]
+# PC mode required — event21 = joystick, event22 = touchpad (ignored)
+name = ""
+vendor_id = 0x10F5
+product_id = 0x7055
+
+[daemon]
+grab_source = true
+log_level = "INFO"
+
+# 1) Flight stick pad
+[virtual_controller_1]
+device_name = "AirTux One"
+vendor_id = 0x045E
+product_id = 0x02A1
+
+[virtual_controller_1.mapping.axes]
+# Stick — roll / pitch
+ABS_X = { target = "ABS_X", invert = false, deadzone = 4096, mode = "centered" }
+ABS_Y = { target = "ABS_Y", invert = false, deadzone = 4096, mode = "centered" }
+# Stick twist → rudder: left = LT, right = RT (analog triggers)
+ABS_Z = { target_left = "ABS_Z", target_right = "ABS_RZ", invert = false, deadzone = 8192, mode = "split_triggers" }
+# H2 mini-stick — full right stick (look / camera)
+ABS_RX = { target = "ABS_RX", invert = false, deadzone = 4096, mode = "centered" }
+ABS_RY = { target = "ABS_RY", invert = false, deadzone = 4096, mode = "centered" }
+# POV H1 — D-Pad
+ABS_HAT0X = { target = "ABS_HAT0X", invert = false, deadzone = 0, mode = "passthrough" }
+ABS_HAT0Y = { target = "ABS_HAT0Y", invert = false, deadzone = 0, mode = "passthrough" }
+
+[virtual_controller_1.mapping.buttons]
+# Stick face — 1:1 A/B/X/Y (B1–B4)
+BTN_TRIGGER         = "BTN_SOUTH"    # A / B1 → A
+BTN_THUMB           = "BTN_EAST"     # B / B2 → B
+BTN_THUMB2          = "BTN_X"        # X / B3 → X
+BTN_TOP             = "BTN_Y"        # Y / B4 → Y
+BTN_TRIGGER_HAPPY2  = "BTN_TR"     # trigger → RB
+# B5–B8 — LB + face (held while pressed)
+BTN_TOP2            = { mode = "modifier_hold", modifier_button = "BTN_TL", target_button = "BTN_SOUTH" }   # B5 → LB+A
+BTN_PINKIE          = { mode = "modifier_hold", modifier_button = "BTN_TL", target_button = "BTN_EAST" }  # B6 → LB+B
+BTN_BASE            = { mode = "modifier_hold", modifier_button = "BTN_TL", target_button = "BTN_WEST" }    # B7 → LB+X
+BTN_BASE2           = { mode = "modifier_hold", modifier_button = "BTN_TL", target_button = "BTN_NORTH" }   # B8 → LB+Y
+# Base plate
+BTN_TRIGGER_HAPPY5  = "BTN_SELECT"   # bottom left → Back
+BTN_TRIGGER_HAPPY6  = "BTN_THUMBL"   # bottom center — free
+BTN_TRIGGER_HAPPY7  = "BTN_START"    # bottom right → Start
+BTN_TRIGGER_HAPPY4  = "BTN_MODE"     # Xbox button → Guide
+BTN_DEAD            = "BTN_TL"       # B16 → LB
+
+# 2) Throttle 1 pad — first lever of the joystick
+[virtual_controller_2]
+device_name = "AirTux One - Throttle 1"
+vendor_id = 0x045E
+product_id = 0x02A0
+
+[virtual_controller_2.mapping.axes]
+# Keep throttle levers on stick axes, not on analog triggers.
+# This matches the working dual profile and avoids the MSFS / browser idle drift.
+ABS_RZ = { target = "ABS_Y", invert = true, deadzone = 0, mode = "linear" }
+
+[virtual_controller_2.mapping.buttons]
+
+# 3) Throttle 2 pad — second lever of the joystick
+[virtual_controller_3]
+device_name = "AirTux One - Throttle 2"
+vendor_id = 0x045E
+product_id = 0x02B0
+
+[virtual_controller_3.mapping.axes]
+ABS_THROTTLE = { target = "ABS_RY", invert = true, deadzone = 0, mode = "linear" }
+
+[virtual_controller_3.mapping.buttons]

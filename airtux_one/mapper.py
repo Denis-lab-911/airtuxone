@@ -173,11 +173,20 @@ class EventMapper:
 
     def _parse_controllers(self, data: dict[str, Any]) -> None:
         self.controllers = []
-        for index in (1, 2):
+        controller_ids = []
+        for key in data:
+            if key.startswith("virtual_controller_"):
+                suffix = key.removeprefix("virtual_controller_")
+                if suffix.isdigit():
+                    controller_ids.append(int(suffix))
+        if not controller_ids:
+            raise ConfigError("No virtual controller sections found in config")
+
+        for index in sorted(controller_ids):
             key = f"virtual_controller_{index}"
             section = data.get(key)
             if section is None:
-                raise ConfigError(f"Missing section [{key}]")
+                continue
             self.controllers.append(
                 ControllerConfig(
                     index=index - 1,
@@ -187,11 +196,21 @@ class EventMapper:
                 )
             )
 
+        if not self.controllers:
+            raise ConfigError("No valid virtual controller sections found in config")
+
     def _build_lookup(self, data: dict[str, Any]) -> None:
         """Inverse les dictionnaires TOML pour lookup O(1) par (type, code) source."""
         self._lookup.clear()
 
-        for ctrl_index, ctrl_num in enumerate((1, 2)):
+        controller_ids = []
+        for key in data:
+            if key.startswith("virtual_controller_"):
+                suffix = key.removeprefix("virtual_controller_")
+                if suffix.isdigit():
+                    controller_ids.append(int(suffix))
+
+        for ctrl_index, ctrl_num in enumerate(sorted(controller_ids)):
             section = data.get(f"virtual_controller_{ctrl_num}", {})
             mapping = section.get("mapping", {})
 

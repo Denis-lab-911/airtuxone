@@ -12,7 +12,7 @@
 
 # AirTux One
 
-Linux daemon that reads a **Turtle Beach VelocityOne Flightstick** via `evdev` and emits a **virtual Xbox 360 controller** via `uinput`. Built for Google Chrome and GeForce NOW to fly Microsoft Flight Simulator with the stick and its buttons.
+Linux daemon that reads a **Turtle Beach VelocityOne Flightstick** via `evdev` and emits a **virtual Xbox 360 controller** via `uinput`. Built for Firefox and GeForce NOW to fly Microsoft Flight Simulator with the stick and its buttons.
 
 ## Quick install
 
@@ -75,14 +75,20 @@ sudo usermod -aG input,uinput $USER
 
 ## Configuration
 
-All mapping lives in [`config.toml`](config.toml). **No axis or button is hardcoded in Python.**
+The base mapping lives in [`config.toml`](config.toml). **No axis or button is hardcoded in Python.**
+
+Use the specialized profiles for particular aircraft types:
+
+- [`config.dual.toml`](config.dual.toml): recommended profile for airliners, with a second virtual pad for throttle management
+- [`config.triple.toml`](config.triple.toml): profile for multi-engine aircraft / helicopters, with one virtual pad for each throttle lever
 
 | Section | Role |
 |---------|------|
 | `[source_device]` | Source flightstick detection (name, vendor, product) |
 | `[daemon]` | Daemon options (`grab_source`, `log_level`) |
-| `[virtual_controller_1]` | Technical decoy controller (Chrome) — no mappings |
+| `[virtual_controller_1]` | Technical decoy controller (browser) — no mappings |
 | `[virtual_controller_2]` | **AirTux One** virtual controller — full mapping |
+| `[virtual_controller_3]` | Optional extra pad for a second throttle in the triple profile |
 
 MSFS mapping is documented in [`docs/en/mapping_velocityone_xbox.md`](docs/en/mapping_velocityone_xbox.md).
 
@@ -115,15 +121,25 @@ export AIRTUX_CONFIG=/path/to/config.toml
 ./airtuxone.sh
 ```
 
-**Dual pads (experimental, Firefox):** throttle levers on a second virtual Xbox controller. Does not change the default profile.
+**Firefox is the recommended browser for multi-controller profiles.**
+
+The multi-pad profiles (dual or triple) are designed for **Firefox + GeForce NOW**. They do not behave reliably in **Chrome** for this specific setup, where the extra virtual controllers are not exposed consistently.
+
+**Dual pads (recommended for airliners):** throttle levers on a second virtual Xbox controller. This is the default profile for airliners and the most stable choice for MSFS / GeForce NOW.
 
 ```bash
 ./airtuxone-dual.sh
 ```
 
-Expected pads: **AirTux One** (stick) and **AirTux One - Throttle** (left lever → left stick Y, right lever → right stick Y). Config: [`config.dual.toml`](config.dual.toml).
+**Triple pads (for prop aircraft / helicopters / twin-engine aircraft):** separate each throttle lever on its own virtual Xbox controller so GeForce NOW/MSFS sees distinct devices for throttle 1 and throttle 2.
 
-In MSFS: filter on **AirTux One - Throttle** before assigning (otherwise “wrong device”). Clear the combined **Throttle** axis, then bind **Throttle 1** / **Throttle 2** each to one lever. Do not leave flight bindings (roll / pitch / look) on that pad.
+```bash
+./airtuxone-triple.sh
+```
+
+Expected pads: **AirTux One** (stick), **AirTux One - Throttle 1** (first lever), and **AirTux One - Throttle 2** (second lever). Config: [`config.triple.toml`](config.triple.toml).
+
+In MSFS: filter on the specific pad name before assigning (otherwise “wrong device”). Bind **Throttle 1** to the first pad and **Throttle 2** to the second pad, then leave the flight stick pad for roll / pitch / look only. Keep each throttle on a stick axis, not on the analog trigger axes, to match the stable dual profile behavior and avoid browser/UI drift at idle.
 
 Or manually:
 
@@ -134,7 +150,7 @@ python -m airtux_one.core
 
 Clean shutdown: `Ctrl+C` or `kill -TERM <pid>`.
 
-**GeForce NOW order:** start the daemon **before** opening Chrome / GeForce NOW.
+**GeForce NOW order:** start the daemon **before** opening Firefox / GeForce NOW.
 
 ## User systemd service
 
@@ -164,10 +180,10 @@ evtest    # select « AirTux One »
 jstest /dev/input/jsN
 ```
 
-### Browser (GeForce NOW / Chrome)
+### Browser (GeForce NOW / Firefox)
 
 1. Start the daemon first
-2. Use **Google Chrome** (not Chromium/Brave)
+2. Use **Firefox**
 3. Select **AirTux One** (`vendor 045e`, `product 02a1`) in the tester or MSFS
 
 ## Troubleshooting

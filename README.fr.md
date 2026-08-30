@@ -12,7 +12,7 @@
 
 # AirTux One
 
-Démon Linux qui lit un **Turtle Beach VelocityOne Flightstick** via `evdev` et émet vers une **manette Xbox 360 virtuelle** via `uinput`. Conçu pour Google Chrome et GeForce NOW afin de piloter Microsoft Flight Simulator avec le manche et les boutons du stick.
+Démon Linux qui lit un **Turtle Beach VelocityOne Flightstick** via `evdev` et émet vers une **manette Xbox 360 virtuelle** via `uinput`. Conçu pour Firefox et GeForce NOW afin de piloter Microsoft Flight Simulator avec le manche et les boutons du stick.
 
 ## Installation rapide
 
@@ -75,14 +75,20 @@ sudo usermod -aG input,uinput $USER
 
 ## Configuration
 
-Tout le mapping est défini dans [`config.toml`](config.toml). **Aucun axe ou bouton n'est codé en dur dans le Python.**
+Le mapping de base est défini dans [`config.toml`](config.toml). **Aucun axe ou bouton n'est codé en dur dans le Python.**
+
+Utilisez les profils spécialisés selon le type d'avion :
+
+- [`config.dual.toml`](config.dual.toml): profil recommandé pour les liners, avec une seconde manette virtuelle pour la gestion des gaz
+- [`config.triple.toml`](config.triple.toml): profil pour monomoteurs / bimoteurs / hélicos, avec une manette virtuelle distincte par levier de gaz
 
 | Section | Rôle |
 |---------|------|
 | `[source_device]` | Critères de détection du flightstick (nom, vendor, product) |
 | `[daemon]` | Options du démon (`grab_source`, `log_level`) |
-| `[virtual_controller_1]` | Manette leurre technique (Chrome) — sans mapping |
+| `[virtual_controller_1]` | Manette leurre technique (navigateur) — sans mapping |
 | `[virtual_controller_2]` | Manette virtuelle **AirTux One** — mapping complet |
+| `[virtual_controller_3]` | Manette supplémentaire pour le second gaz dans le profil triple |
 
 Le mapping MSFS est documenté dans [`docs/fr/mapping_velocityone_xbox.md`](docs/fr/mapping_velocityone_xbox.md).
 
@@ -115,15 +121,25 @@ export AIRTUX_CONFIG=/chemin/vers/config.toml
 ./airtuxone.sh
 ```
 
-**Deux manettes (expérimental, Firefox) :** leviers de gaz sur une seconde manette Xbox virtuelle. Ne remplace pas le profil par défaut.
+**Firefox est le navigateur recommandé pour les profils multi-manettes.**
+
+Les profils multi-manettes (dual ou triple) sont conçus pour **Firefox + GeForce NOW**. Ils ne sont pas fiables sous **Chrome** pour cette configuration particulière, où les manettes virtuelles supplémentaires ne sont pas toujours exposées correctement.
+
+**Deux manettes (profil recommandé pour les liners) :** leviers de gaz sur une seconde manette Xbox virtuelle. C’est le profil le plus stable pour les liners, et le bon choix pour le fonctionnement MSFS / GeForce NOW.
 
 ```bash
 ./airtuxone-dual.sh
 ```
 
-Manettes attendues : **AirTux One** (manche) et **AirTux One - Throttle** (levier gauche → stick gauche Y, levier droit → stick droit Y). Config : [`config.dual.toml`](config.dual.toml).
+**Trois manettes (pour monomoteurs, bimoteurs et hélicos) :** chaque levier de gaz est séparé sur une manette Xbox virtuelle distincte, pour que GeForce NOW / MSFS voie des périphériques distincts pour **Throttle 1** et **Throttle 2**.
 
-Dans MSFS : filtrer sur **AirTux One - Throttle** avant d’assigner (sinon « mauvais périphérique »). Effacer l’axe **Throttle** combiné, puis **Throttle 1** / **Throttle 2** chacun sur un levier. Ne pas laisser de binding vol (roulis / tangage / regard) sur cette manette.
+```bash
+./airtuxone-triple.sh
+```
+
+Manettes attendues : **AirTux One** (manche), **AirTux One - Throttle 1** (premier levier) et **AirTux One - Throttle 2** (second levier). Config : [`config.triple.toml`](config.triple.toml).
+
+Dans MSFS : filtrer sur le nom exact du périphérique avant d’assigner (sinon « mauvais périphérique »). Assigner **Throttle 1** sur la première manette et **Throttle 2** sur la seconde, puis laisser le manche principal pour roulis / tangage / regard. Conserver chaque gaz sur un axe de stick, pas sur des gâchettes analogiques, pour rester compatible avec le comportement stable du profil dual.
 
 Ou manuellement :
 
@@ -134,7 +150,7 @@ python -m airtux_one.core
 
 Arrêt propre : `Ctrl+C` ou `kill -TERM <pid>`.
 
-**Ordre GeForce NOW :** lancez le démon **avant** d'ouvrir Chrome / GeForce NOW.
+**Ordre GeForce NOW :** lancez le démon **avant** d'ouvrir Firefox / GeForce NOW.
 
 ## Service systemd (utilisateur)
 
@@ -164,10 +180,10 @@ evtest    # choisir « AirTux One »
 jstest /dev/input/jsN
 ```
 
-### Navigateur (GeForce NOW / Chrome)
+### Navigateur (GeForce NOW / Firefox)
 
 1. Démon lancé en premier
-2. **Google Chrome** (pas Chromium/Brave)
+2. **Firefox**
 3. Sélectionner **AirTux One** (`vendor 045e`, `product 02a1`) dans le testeur ou MSFS
 
 ## Dépannage
