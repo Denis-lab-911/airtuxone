@@ -115,6 +115,16 @@ export AIRTUX_CONFIG=/path/to/config.toml
 ./airtuxone.sh
 ```
 
+**Dual pads (experimental, Firefox):** throttle levers on a second virtual Xbox controller. Does not change the default profile.
+
+```bash
+./airtuxone-dual.sh
+```
+
+Expected pads: **AirTux One** (stick) and **AirTux One - Throttle** (left lever → left stick Y, right lever → right stick Y). Config: [`config.dual.toml`](config.dual.toml).
+
+In MSFS: filter on **AirTux One - Throttle** before assigning (otherwise “wrong device”). Clear the combined **Throttle** axis, then bind **Throttle 1** / **Throttle 2** each to one lever. Do not leave flight bindings (roll / pitch / look) on that pad.
+
 Or manually:
 
 ```bash
@@ -184,7 +194,9 @@ jstest /dev/input/jsN
 airtuxone/
 ├── airtuxone_logo.png
 ├── airtuxone.sh
+├── airtuxone-dual.sh
 ├── config.toml
+├── config.dual.toml
 ├── CONTRIBUTING.md
 ├── docs/
 │   ├── en/mapping_velocityone_xbox.md

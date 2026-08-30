@@ -115,6 +115,16 @@ export AIRTUX_CONFIG=/chemin/vers/config.toml
 ./airtuxone.sh
 ```
 
+**Deux manettes (expérimental, Firefox) :** leviers de gaz sur une seconde manette Xbox virtuelle. Ne remplace pas le profil par défaut.
+
+```bash
+./airtuxone-dual.sh
+```
+
+Manettes attendues : **AirTux One** (manche) et **AirTux One - Throttle** (levier gauche → stick gauche Y, levier droit → stick droit Y). Config : [`config.dual.toml`](config.dual.toml).
+
+Dans MSFS : filtrer sur **AirTux One - Throttle** avant d’assigner (sinon « mauvais périphérique »). Effacer l’axe **Throttle** combiné, puis **Throttle 1** / **Throttle 2** chacun sur un levier. Ne pas laisser de binding vol (roulis / tangage / regard) sur cette manette.
+
 Ou manuellement :
 
 ```bash
@@ -184,7 +194,9 @@ jstest /dev/input/jsN
 airtuxone/
 ├── airtuxone_logo.png
 ├── airtuxone.sh
+├── airtuxone-dual.sh
 ├── config.toml
+├── config.dual.toml
 ├── CONTRIBUTING.md
 ├── docs/
 │   ├── en/mapping_velocityone_xbox.md

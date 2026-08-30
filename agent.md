@@ -10,6 +10,9 @@ Développer un démon Linux (AirTux One) qui intercepte les entrées d'un Turtle
 airtuxone/
 ├── agent.md
 ├── config.toml           # Mapping TOML (section virtual_controller_2)
+├── config.dual.toml      # Profil expérimental 2 pads (manche + gaz)
+├── airtuxone.sh          # Lanceur profil par défaut
+├── airtuxone-dual.sh     # Lanceur profil dual (AIRTUX_CONFIG)
 ├── docs/
 │   ├── en/mapping_velocityone_xbox.md
 │   └── fr/mapping_velocityone_xbox.md
@@ -57,3 +60,8 @@ airtuxone/
 | 2026-06-22 | Revert mapping gaz 2ᵉ manette (GFN/MSFS ne voit qu'une manette) |
 | 2026-06-22 | Publication OSS : doc bilingue (README EN/FR, docs/en, docs/fr, CONTRIBUTING) |
 | 2026-06-22 | config.toml : commentaires en anglais |
+| 2026-06-22 | Publication OSS étape 2 : commit `93b1c4d`, push GitHub, description/topics repo, tag `v0.1.0` |
+| 2026-06-27 | `install-desktop.sh` — raccourci bureau/menu pour `airtuxone.sh` (xdg-user-dir → `~/Bureau` sous Mint FR) |
+| 2026-08-22 | Profil dual distinct : `config.dual.toml` + `airtuxone-dual.sh` (gaz ABS_RZ/ABS_THROTTLE → 2ᵉ pad) |
+| 2026-08-22 | Dual gaz : `linear_positive` + axes Y / RX (évite conflit Throttle L/R bipolar) |
+| 2026-08-22 | Dual gaz : retour Y/RY + `linear` — RX = regard H2, MSFS « mauvais périphérique » |
