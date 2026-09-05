@@ -2,6 +2,8 @@
 
 This document summarizes the mapping that turns a Turtle Beach VelocityOne Flightstick into a virtual Xbox controller for Microsoft Flight Simulator (MSFS) via GeForce NOW.
 
+It describes the base profile, [`config.toml`](../../config.toml). The dual and triple profiles keep the flight mapping but route throttle levers to separate virtual controllers; see the profile table in the [README](../../README.md).
+
 ## Mapping Summary
 
 ### Axes
@@ -98,3 +100,16 @@ This mapping is applied in [`config.toml`](../../config.toml), section `[virtual
 | `split_triggers` | Twist → LT/RT |
 | `modifier_hold` | B5–B8 → LB + face button held |
 | `passthrough` | POV H1 / D-Pad |
+| `linear` | Full source range mapped to a bipolar Xbox stick axis |
+| `linear_positive` | Full source range mapped to a positive stick axis |
+| `linear_trigger` | Full source range mapped to a 0–255 trigger |
+| `centered_trigger` | Centered source axis mapped to one 0–255 trigger, neutral at 128 |
+| `trim_impulse` | Axis movement emits a configured modifier + D-Pad impulse |
+| `trim_pulse` | Button press emits a configured modifier + D-Pad pulse |
+| `dpad_hold` | Button hold emits a configured D-Pad direction, optionally with a modifier |
+
+### TOML parameters
+
+Axis entries accept `target`, `mode`, `invert`, and `deadzone`. `linear`, `linear_positive`, and `linear_trigger` can optionally use `input_min`/`input_max` (or `range_min`/`range_max`) to calibrate the source range. `split_triggers` requires `target_left` and `target_right` rather than `target`.
+
+Button entries normally contain a target code string. `modifier_hold` requires `modifier_button` and `target_button`; `trim_pulse` and `dpad_hold` accept `modifier_button`, `hat`, and `hat_value`. `trim_impulse` accepts `modifier_button`, `hat`, `hat_up`, `hat_down`, and `threshold`.

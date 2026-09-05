@@ -6,6 +6,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="$PROJECT_ROOT/.venv"
 VELOCITYONE_VENDOR="10f5"
 VELOCITYONE_PRODUCT="7055"
+SOURCE_INPUT_GROUP="airtux-input"
 UDEV_RULES_FILE="/etc/udev/rules.d/99-airtuxone-velocityone.rules"
 UDEV_HIDE_JS_RULES="/etc/udev/rules.d/99-airtuxone-hide-physical-js.rules"
 UINPUT_UDEV_RULES="/etc/udev/rules.d/99-airtuxone-uinput.rules"
@@ -241,6 +242,20 @@ ensure_uinput_group() {
     fi
 }
 
+ensure_source_input_group() {
+    if group_exists "$SOURCE_INPUT_GROUP"; then
+        log_ok "Group '$SOURCE_INPUT_GROUP' exists"
+        return
+    fi
+    log_ok "Creating group '$SOURCE_INPUT_GROUP' for VelocityOne access..."
+    if require_sudo groupadd --system "$SOURCE_INPUT_GROUP" 2>/dev/null || require_sudo groupadd "$SOURCE_INPUT_GROUP"; then
+        log_ok "Group '$SOURCE_INPUT_GROUP' created"
+    else
+        log_err "Failed to create group '$SOURCE_INPUT_GROUP'"
+        exit 1
+    fi
+}
+
 setup_uinput_udev() {
     if [[ -f "$UINPUT_UDEV_RULES" ]]; then
         log_ok "uinput udev rule already present"
@@ -264,8 +279,9 @@ EOF
 setup_groups() {
     local changed=false
     ensure_uinput_group
+    ensure_source_input_group
 
-    for group in input uinput; do
+    for group in "$SOURCE_INPUT_GROUP" uinput; do
         if ! group_exists "$group"; then
             log_err "Group '$group' does not exist and could not be used"
             exit 1
@@ -311,15 +327,12 @@ EOF
 }
 
 setup_udev() {
-    if [[ -f "$UDEV_RULES_FILE" ]]; then
-        log_ok "udev rules already present"
-        return
-    fi
     log_ok "Installing udev rules for VelocityOne Flightstick..."
     require_sudo tee "$UDEV_RULES_FILE" >/dev/null <<EOF
 # AirTux One — Turtle Beach VelocityOne Flightstick
-KERNEL=="event*", ATTRS{idVendor}=="${VELOCITYONE_VENDOR}", ATTRS{idProduct}=="${VELOCITYONE_PRODUCT}", MODE="0660", GROUP="input", TAG+="uaccess"
-KERNEL=="hidraw*", ATTRS{idVendor}=="${VELOCITYONE_VENDOR}", ATTRS{idProduct}=="${VELOCITYONE_PRODUCT}", MODE="0660", GROUP="input", TAG+="uaccess"
+# Restrict access to the dedicated AirTux group; do not grant global input access.
+KERNEL=="event*", ATTRS{idVendor}=="${VELOCITYONE_VENDOR}", ATTRS{idProduct}=="${VELOCITYONE_PRODUCT}", MODE="0660", GROUP="${SOURCE_INPUT_GROUP}", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="${VELOCITYONE_VENDOR}", ATTRS{idProduct}=="${VELOCITYONE_PRODUCT}", MODE="0660", GROUP="${SOURCE_INPUT_GROUP}", TAG+="uaccess"
 EOF
     require_sudo udevadm control --reload-rules
     require_sudo udevadm trigger
@@ -375,7 +388,7 @@ check_velocityone() {
 }
 
 check_groups() {
-    for group in input uinput; do
+    for group in "$SOURCE_INPUT_GROUP" uinput; do
         if user_in_group "$group"; then
             log_ok "Member of group '$group'"
         else

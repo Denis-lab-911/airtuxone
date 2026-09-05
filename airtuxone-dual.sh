@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# AirTux One Dual — 2 virtual Xbox pads (flight + throttle). Experimental Firefox test.
+# AirTux One Dual — 2 virtual Xbox pads (flight + throttle).
 # Default profile: ./airtuxone.sh + config.toml
 set -euo pipefail
 

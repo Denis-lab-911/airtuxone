@@ -30,7 +30,7 @@ airtuxone/
 
 - Mapping 100 % externe via `config.toml` (aucun code en dur).
 - Lookup O(1) : dictionnaires inversés au démarrage dans `mapper.py`.
-- Permissions Linux : groupes `input` et `uinput`, module noyau `uinput`.
+- Permissions Linux : groupes dédiés `airtux-input` et `uinput`, module noyau `uinput`.
 - Mapping MSFS : voir `docs/fr/mapping_velocityone_xbox.md`.
 
 ## [Tâches Réalisées]
@@ -65,3 +65,7 @@ airtuxone/
 | 2026-08-22 | Profil dual distinct : `config.dual.toml` + `airtuxone-dual.sh` (gaz ABS_RZ/ABS_THROTTLE → 2ᵉ pad) |
 | 2026-08-22 | Dual gaz : `linear_positive` + axes Y / RX (évite conflit Throttle L/R bipolar) |
 | 2026-08-22 | Dual gaz : retour Y/RY + `linear` — RX = regard H2, MSFS « mauvais périphérique » |
+| 2026-09-05 | Routage des contrôleurs TOML corrigé pour les indices non consécutifs ; validation stricte des sections et options de configuration |
+| 2026-09-05 | Durcissement des invariants et fermetures périphériques ; remplacement des captures d'exceptions génériques |
+| 2026-09-05 | Permissions réduites : accès VelocityOne via `airtux-input`, accès uinput via `uinput`, sans ajout au groupe global `input` |
+| 2026-09-05 | Documentation EN/FR synchronisée pour profils base/dual/triple, sécurité et maintenance des dépendances |

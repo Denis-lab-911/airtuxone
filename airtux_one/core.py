@@ -7,9 +7,9 @@ import select
 import signal
 import sys
 
-from evdev import ecodes
+from evdev import InputEvent, ecodes
 
-from airtux_one.devices import DeviceManager, DeviceNotFoundError
+from airtux_one.devices import DeviceManager, DeviceNotFoundError, VirtualController
 from airtux_one.mapper import ConfigError, EventMapper, MappingRule
 
 logger = logging.getLogger(__name__)
@@ -90,9 +90,11 @@ class AirTuxDaemon:
         return 0
 
     def _event_loop(self) -> None:
-        assert self._device_manager is not None
+        if self._device_manager is None:
+            raise RuntimeError("Device manager is not initialized")
         source = self._device_manager.source
-        assert source is not None
+        if source is None:
+            raise RuntimeError("Source device is not initialized")
 
         while self._running:
             ready, _, _ = select.select([source.fd], [], [], _POLL_TIMEOUT)
@@ -106,14 +108,15 @@ class AirTuxDaemon:
                     continue
                 self._emit_mapped_event(rule, event)
 
-    def _emit_mapped_event(self, rule: MappingRule, event: object) -> None:
-        assert self._device_manager is not None
+    def _emit_mapped_event(self, rule: MappingRule, event: InputEvent) -> None:
+        if self._device_manager is None:
+            raise RuntimeError("Device manager is not initialized")
         controller = self._device_manager.controllers.get(rule.controller_index)
         if controller is None:
             return
 
-        value = event.value  # type: ignore[attr-defined]
-        event_code = event.code  # type: ignore[attr-defined]
+        value = event.value
+        event_code = event.code
         if rule.target_type == ecodes.EV_ABS:
             if rule.mode == "trim_impulse":
                 self._emit_trim_impulse(rule, value, event_code, controller)
@@ -135,7 +138,7 @@ class AirTuxDaemon:
             if rule.mode == "trim_pulse" and rule.impulse_modifier_code is not None:
                 if value:
                     hat_val = rule.impulse_hat_value if rule.impulse_hat_value is not None else -1
-                    controller.emit_trim_combo(  # type: ignore[attr-defined]
+                    controller.emit_trim_combo(
                         rule.impulse_modifier_code,
                         hat_val,
                         frames=_TRIM_PULSE_FRAMES,
@@ -143,14 +146,14 @@ class AirTuxDaemon:
                 return
             if rule.mode == "dpad_hold":
                 hat_val = rule.impulse_hat_value if rule.impulse_hat_value is not None else -1
-                controller.emit_dpad_hold(  # type: ignore[attr-defined]
+                controller.emit_dpad_hold(
                     hat_val,
                     bool(value),
                     rule.impulse_modifier_code,
                 )
                 return
             if rule.mode == "modifier_hold" and rule.impulse_modifier_code is not None:
-                controller.emit_modifier_hold(  # type: ignore[attr-defined]
+                controller.emit_modifier_hold(
                     rule.impulse_modifier_code,
                     rule.target_code,
                     bool(value),
@@ -166,10 +169,11 @@ class AirTuxDaemon:
         rule: MappingRule,
         value: int,
         source_code: int,
-        controller: object,
+        controller: VirtualController,
     ) -> None:
         """Molette trim : impulsion RB + D-Pad Haut/Bas par cran (~280 unités)."""
-        assert rule.impulse_modifier_code is not None
+        if rule.impulse_modifier_code is None:
+            raise RuntimeError("Trim impulse mapping is missing its modifier button")
         last = self._trim_last.get(source_code)
         if last is None:
             self._trim_last[source_code] = value
@@ -191,7 +195,7 @@ class AirTuxDaemon:
             delta,
             hat_val,
         )
-        controller.emit_trim_combo(  # type: ignore[attr-defined]
+        controller.emit_trim_combo(
             rule.impulse_modifier_code,
             hat_val,
             frames=_TRIM_PULSE_FRAMES,
@@ -202,7 +206,8 @@ def main() -> int:
     try:
         mapper = EventMapper()
     except ConfigError as exc:
-        print(f"Configuration error: {exc}", file=sys.stderr)
+        logging.basicConfig(format="%(levelname)s: %(message)s")
+        logger.error("Configuration error: %s", exc)
         return 1
 
     daemon = AirTuxDaemon(mapper)

@@ -28,7 +28,7 @@ The `setup.sh` script automates:
 - system packages (`python3-venv`, `evtest`, …)
 - `.venv/` creation and Python dependencies
 - persistent `uinput` kernel module loading
-- adding your user to the `input` and `uinput` groups
+- adding your user to the dedicated `airtux-input` and `uinput` groups
 - optional udev rules for the VelocityOne
 
 **Important:** log out and back in (or reboot) after group changes before starting the daemon.
@@ -69,7 +69,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 sudo modprobe uinput
 echo uinput | sudo tee /etc/modules-load.d/uinput.conf
-sudo usermod -aG input,uinput $USER
+sudo usermod -aG airtux-input,uinput $USER
 # Log out and back in after group changes
 ```
 
@@ -86,9 +86,15 @@ Use the specialized profiles for particular aircraft types:
 |---------|------|
 | `[source_device]` | Source flightstick detection (name, vendor, product) |
 | `[daemon]` | Daemon options (`grab_source`, `log_level`) |
-| `[virtual_controller_1]` | Technical decoy controller (browser) — no mappings |
-| `[virtual_controller_2]` | **AirTux One** virtual controller — full mapping |
-| `[virtual_controller_3]` | Optional extra pad for a second throttle in the triple profile |
+| `[virtual_controller_1]` | First virtual controller; its role depends on the selected profile |
+| `[virtual_controller_2]` | Second virtual controller; its role depends on the selected profile |
+| `[virtual_controller_3]` | Optional third controller in the triple profile |
+
+| Profile | Controller layout |
+|---------|-------------------|
+| Base (`config.toml`) | 1: technical decoy; 2: **AirTux One** flight stick |
+| Dual (`config.dual.toml`) | 1: **AirTux One - Throttle**; 2: **AirTux One** flight stick |
+| Triple (`config.triple.toml`) | 1: **AirTux One** flight stick; 2: **Throttle 1**; 3: **Throttle 2** |
 
 MSFS mapping is documented in [`docs/en/mapping_velocityone_xbox.md`](docs/en/mapping_velocityone_xbox.md).
 
@@ -191,7 +197,7 @@ jstest /dev/input/jsN
 | Issue | Fix |
 |-------|-----|
 | `Device or resource busy` on startup | Close jstest/evtest and Chrome tabs (gamepad-tester, GFN); restart `./airtuxone.sh` |
-| `Permission denied` on `/dev/input/*` | `./setup.sh` or `sudo usermod -aG input $USER` + re-login |
+| `Permission denied` on `/dev/input/*` | `./setup.sh` or `sudo usermod -aG airtux-input $USER` + re-login |
 | `Permission denied` on `/dev/uinput` | `./setup.sh` + re-login |
 | Source device not found | Plug in VelocityOne; `./setup.sh --check`; **PC mode** on stick |
 | Throttle not analog (evtest: 0, 1, 32768) | Xbox mode active — switch to **PC mode** |
@@ -201,8 +207,20 @@ jstest /dev/input/jsN
 ## Security
 
 - Do **not** run the daemon as root.
-- Use the `input` and `uinput` groups as intended.
+- Use only the dedicated `airtux-input` and `uinput` groups installed by `./setup.sh`.
+- `airtux-input` is limited to the VelocityOne; do not add users to the global `input` group for AirTux One. Existing members can leave it with `sudo gpasswd -d $USER input` only after confirming no other application needs it.
 - Exclusive grab (`grab_source`) blocks other readers of the physical stick.
+
+## Dependency maintenance
+
+Before a release, create a fresh virtual environment and run:
+
+```bash
+pip install --upgrade -r requirements.txt
+pip check
+pip index versions evdev
+pip-audit -r requirements.txt
+```
 
 ## Project layout
 
@@ -211,8 +229,10 @@ airtuxone/
 ├── airtuxone_logo.png
 ├── airtuxone.sh
 ├── airtuxone-dual.sh
+├── airtuxone-triple.sh
 ├── config.toml
 ├── config.dual.toml
+├── config.triple.toml
 ├── CONTRIBUTING.md
 ├── docs/
 │   ├── en/mapping_velocityone_xbox.md
@@ -222,6 +242,9 @@ airtuxone/
 ├── README.fr.md
 ├── requirements.txt
 ├── setup.sh
+├── install-desktop.sh
+├── install-desktop-dual.sh
+├── install-desktop-triple.sh
 └── airtux_one/
     ├── core.py
     ├── devices.py

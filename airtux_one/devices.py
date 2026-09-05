@@ -214,21 +214,32 @@ class DeviceManager:
             logger.info("Source device grabbed (exclusive access)")
 
         self.controllers = {}
-        for cfg in self._controller_configs:
-            self.controllers[cfg.index] = VirtualController(cfg)
+        try:
+            for cfg in self._controller_configs:
+                self.controllers[cfg.index] = VirtualController(cfg)
+        except OSError:
+            self.close()
+            raise
 
     def close(self) -> None:
         if self.source is not None:
-            if self._grab_source:
-                try:
-                    self.source.ungrab()
-                except OSError:
-                    pass
-            self.source.close()
-            self.source = None
+            try:
+                if self._grab_source:
+                    try:
+                        self.source.ungrab()
+                    except OSError as exc:
+                        logger.warning("Failed to ungrab source device: %s", exc)
+                self.source.close()
+            except OSError as exc:
+                logger.warning("Failed to close source device: %s", exc)
+            finally:
+                self.source = None
 
         for controller in self.controllers.values():
-            controller.close()
+            try:
+                controller.close()
+            except OSError as exc:
+                logger.warning("Failed to close virtual controller: %s", exc)
         self.controllers.clear()
 
     def __enter__(self) -> DeviceManager:

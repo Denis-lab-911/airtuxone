@@ -28,7 +28,7 @@ Le script `setup.sh` automatise :
 - installation des paquets système (`python3-venv`, `evtest`, …)
 - création du venv `.venv/` et installation des dépendances Python
 - chargement persistant du module noyau `uinput`
-- ajout de l'utilisateur aux groupes `input` et `uinput`
+- ajout de l'utilisateur aux groupes dédiés `airtux-input` et `uinput`
 - installation optionnelle des règles udev pour le VelocityOne
 
 **Important :** si les groupes ont été modifiés, déconnectez-vous et reconnectez-vous (ou redémarrez) avant de lancer le démon.
@@ -69,7 +69,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 sudo modprobe uinput
 echo uinput | sudo tee /etc/modules-load.d/uinput.conf
-sudo usermod -aG input,uinput $USER
+sudo usermod -aG airtux-input,uinput $USER
 # Reconnexion requise après modification des groupes
 ```
 
@@ -86,9 +86,15 @@ Utilisez les profils spécialisés selon le type d'avion :
 |---------|------|
 | `[source_device]` | Critères de détection du flightstick (nom, vendor, product) |
 | `[daemon]` | Options du démon (`grab_source`, `log_level`) |
-| `[virtual_controller_1]` | Manette leurre technique (navigateur) — sans mapping |
-| `[virtual_controller_2]` | Manette virtuelle **AirTux One** — mapping complet |
-| `[virtual_controller_3]` | Manette supplémentaire pour le second gaz dans le profil triple |
+| `[virtual_controller_1]` | Première manette virtuelle ; son rôle dépend du profil choisi |
+| `[virtual_controller_2]` | Seconde manette virtuelle ; son rôle dépend du profil choisi |
+| `[virtual_controller_3]` | Troisième manette facultative du profil triple |
+
+| Profil | Disposition des manettes |
+|---------|--------------------------|
+| Base (`config.toml`) | 1 : leurre technique ; 2 : manche **AirTux One** |
+| Dual (`config.dual.toml`) | 1 : **AirTux One - Throttle** ; 2 : manche **AirTux One** |
+| Triple (`config.triple.toml`) | 1 : manche **AirTux One** ; 2 : **Throttle 1** ; 3 : **Throttle 2** |
 
 Le mapping MSFS est documenté dans [`docs/fr/mapping_velocityone_xbox.md`](docs/fr/mapping_velocityone_xbox.md).
 
@@ -191,7 +197,7 @@ jstest /dev/input/jsN
 | Problème | Solution |
 |----------|----------|
 | `Device or resource busy` au démarrage | Fermer jstest/evtest et les onglets Chrome (gamepad-tester, GFN) ; relancer `./airtuxone.sh` |
-| `Permission denied` sur `/dev/input/*` | `./setup.sh` ou `sudo usermod -aG input $USER` + reconnexion |
+| `Permission denied` sur `/dev/input/*` | `./setup.sh` ou `sudo usermod -aG airtux-input $USER` + reconnexion |
 | `Permission denied` sur `/dev/uinput` | `./setup.sh` + reconnexion |
 | Device source introuvable | Brancher le VelocityOne ; `./setup.sh --check` ; mode **PC** sur le stick |
 | Gaz sans précision (evtest : 0, 1, 32768) | Mode Xbox actif — passer en **mode PC** |
@@ -201,8 +207,20 @@ jstest /dev/input/jsN
 ## Sécurité
 
 - Ne **pas** lancer le démon en root.
-- Utiliser les groupes `input` et `uinput`.
+- Utiliser uniquement les groupes dédiés `airtux-input` et `uinput` installés par `./setup.sh`.
+- `airtux-input` est limité au VelocityOne ; ne pas ajouter d'utilisateur au groupe global `input` pour AirTux One. Un membre existant peut le quitter avec `sudo gpasswd -d $USER input` seulement après avoir vérifié qu'aucun autre logiciel ne l'utilise.
 - Le grab exclusif (`grab_source`) bloque les autres lecteurs du stick physique.
+
+## Maintenance des dépendances
+
+Avant une publication, créez un environnement virtuel propre et lancez :
+
+```bash
+pip install --upgrade -r requirements.txt
+pip check
+pip index versions evdev
+pip-audit -r requirements.txt
+```
 
 ## Arborescence
 
@@ -211,8 +229,10 @@ airtuxone/
 ├── airtuxone_logo.png
 ├── airtuxone.sh
 ├── airtuxone-dual.sh
+├── airtuxone-triple.sh
 ├── config.toml
 ├── config.dual.toml
+├── config.triple.toml
 ├── CONTRIBUTING.md
 ├── docs/
 │   ├── en/mapping_velocityone_xbox.md
@@ -222,6 +242,9 @@ airtuxone/
 ├── README.fr.md
 ├── requirements.txt
 ├── setup.sh
+├── install-desktop.sh
+├── install-desktop-dual.sh
+├── install-desktop-triple.sh
 └── airtux_one/
     ├── core.py
     ├── devices.py

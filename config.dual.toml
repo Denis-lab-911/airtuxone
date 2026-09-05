@@ -12,7 +12,7 @@ product_id = 0x7055
 grab_source = true
 log_level = "INFO"
 
-# Dual profile (Firefox test): throttle levers on a second Xbox pad.
+# Dual profile: throttle levers on a second Xbox pad.
 # Default profile remains config.toml + ./airtuxone.sh
 [virtual_controller_1]
 device_name = "AirTux One - Throttle"
@@ -29,7 +29,7 @@ ABS_THROTTLE = { target = "ABS_RY", invert = true, deadzone = 0, mode = "linear"
 
 [virtual_controller_1.mapping.buttons]
 
-# Same flight mapping as config.toml
+# Same flight mapping as config.toml — see docs/en/mapping_velocityone_xbox.md
 [virtual_controller_2]
 device_name = "AirTux One"
 vendor_id = 0x045E

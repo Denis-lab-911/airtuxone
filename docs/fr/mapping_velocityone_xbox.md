@@ -2,6 +2,8 @@
 
 Ce document récapitule le mapping pour transformer votre Turtle Beach VelocityOne Flightstick en manette Xbox virtuelle pour Microsoft Flight Simulator (MSFS) via GeForce NOW.
 
+Il décrit le profil de base, [`config.toml`](../../config.toml). Les profils dual et triple conservent le mapping de vol mais dirigent les leviers de gaz vers des manettes virtuelles distinctes ; voir le tableau des profils dans le [README](../../README.fr.md).
+
 ## Tableau de Synthèse du Mapping
 
 ### Axes
@@ -98,3 +100,16 @@ Ce mapping est appliqué dans [`config.toml`](../../config.toml), section `[virt
 | `split_triggers` | Torsion → LT/RT |
 | `modifier_hold` | B5–B8 → LB + bouton face maintenu |
 | `passthrough` | POV H1 / D-Pad |
+| `linear` | Plage source complète vers un axe de stick Xbox bipolaire |
+| `linear_positive` | Plage source complète vers un axe de stick positif |
+| `linear_trigger` | Plage source complète vers une gâchette 0–255 |
+| `centered_trigger` | Axe source centré vers une gâchette 0–255, neutre à 128 |
+| `trim_impulse` | Mouvement d'axe émettant une impulsion modificateur + D-Pad configurée |
+| `trim_pulse` | Appui bouton émettant une impulsion modificateur + D-Pad configurée |
+| `dpad_hold` | Maintien bouton émettant une direction D-Pad, avec modificateur optionnel |
+
+### Paramètres TOML
+
+Les entrées d'axe acceptent `target`, `mode`, `invert` et `deadzone`. `linear`, `linear_positive` et `linear_trigger` peuvent utiliser `input_min`/`input_max` (ou `range_min`/`range_max`) pour calibrer la plage source. `split_triggers` nécessite `target_left` et `target_right` au lieu de `target`.
+
+Les entrées bouton contiennent normalement une chaîne de code cible. `modifier_hold` nécessite `modifier_button` et `target_button` ; `trim_pulse` et `dpad_hold` acceptent `modifier_button`, `hat` et `hat_value`. `trim_impulse` accepte `modifier_button`, `hat`, `hat_up`, `hat_down` et `threshold`.
