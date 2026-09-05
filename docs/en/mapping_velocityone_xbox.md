@@ -92,7 +92,7 @@ It describes the base profile, [`config.toml`](../../config.toml). The dual and 
 
 ## AirTux One implementation
 
-This mapping is applied in [`config.toml`](../../config.toml), section `[virtual_controller_2]` (virtual controller **AirTux One**).
+This mapping is applied in [`config.toml`](../../config.toml), section `[virtual_controller_1]` (virtual controller **AirTux One**).
 
 | TOML mode | Usage |
 | :--- | :--- |

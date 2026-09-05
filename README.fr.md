@@ -92,8 +92,8 @@ Utilisez les profils spécialisés selon le type d'avion :
 
 | Profil | Disposition des manettes |
 |---------|--------------------------|
-| Base (`config.toml`) | 1 : leurre technique ; 2 : manche **AirTux One** |
-| Dual (`config.dual.toml`) | 1 : **AirTux One - Throttle** ; 2 : manche **AirTux One** |
+| Base (`config.toml`) | 1 : manche **AirTux One** |
+| Dual (`config.dual.toml`) | 1 : manche **AirTux One** ; 2 : **AirTux One - Throttle** |
 | Triple (`config.triple.toml`) | 1 : manche **AirTux One** ; 2 : **Throttle 1** ; 3 : **Throttle 2** |
 
 Le mapping MSFS est documenté dans [`docs/fr/mapping_velocityone_xbox.md`](docs/fr/mapping_velocityone_xbox.md).
@@ -131,13 +131,13 @@ export AIRTUX_CONFIG=/chemin/vers/config.toml
 
 Les profils multi-manettes (dual ou triple) sont conçus pour **Firefox + GeForce NOW**. Ils ne sont pas fiables sous **Chrome** pour cette configuration particulière, où les manettes virtuelles supplémentaires ne sont pas toujours exposées correctement.
 
-**Deux manettes (profil recommandé pour les liners) :** leviers de gaz sur une seconde manette Xbox virtuelle. C’est le profil le plus stable pour les liners, et le bon choix pour le fonctionnement MSFS / GeForce NOW.
+**Deux manettes :** 1 levier de gaz sur une seconde manette Xbox virtuelle.
 
 ```bash
 ./airtuxone-dual.sh
 ```
 
-**Trois manettes (pour monomoteurs, bimoteurs et hélicos) :** chaque levier de gaz est séparé sur une manette Xbox virtuelle distincte, pour que GeForce NOW / MSFS voie des périphériques distincts pour **Throttle 1** et **Throttle 2**.
+**Trois manettes :** 2 leviers de gaz séparés sur une manette Xbox virtuelle distincte, pour que GeForce NOW / MSFS voie des périphériques distincts pour **Throttle 1** et **Throttle 2**. Cela permet d'utiliser réellement les 2 manettes de gaz analogiques du joystick.
 
 ```bash
 ./airtuxone-triple.sh

@@ -92,8 +92,8 @@ Use the specialized profiles for particular aircraft types:
 
 | Profile | Controller layout |
 |---------|-------------------|
-| Base (`config.toml`) | 1: technical decoy; 2: **AirTux One** flight stick |
-| Dual (`config.dual.toml`) | 1: **AirTux One - Throttle**; 2: **AirTux One** flight stick |
+| Base (`config.toml`) | 1: **AirTux One** flight stick |
+| Dual (`config.dual.toml`) | 1: **AirTux One** flight stick; 2: **AirTux One - Throttle** |
 | Triple (`config.triple.toml`) | 1: **AirTux One** flight stick; 2: **Throttle 1**; 3: **Throttle 2** |
 
 MSFS mapping is documented in [`docs/en/mapping_velocityone_xbox.md`](docs/en/mapping_velocityone_xbox.md).
