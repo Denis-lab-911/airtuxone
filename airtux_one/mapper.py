@@ -150,25 +150,44 @@ class EventMapper:
         if not self._config_path.is_file():
             raise ConfigError(f"Config file not found: {self._config_path}")
 
-        with open(self._config_path, "rb") as fh:
-            data = tomllib.load(fh)
+        try:
+            with open(self._config_path, "rb") as fh:
+                data = tomllib.load(fh)
+        except (OSError, tomllib.TOMLDecodeError) as exc:
+            raise ConfigError(f"Cannot read config {self._config_path}: {exc}") from exc
 
-        self._parse_source(data.get("source_device", {}))
-        self._parse_daemon(data.get("daemon", {}))
+        source_section = data.get("source_device")
+        if not isinstance(source_section, dict):
+            raise ConfigError("Missing or invalid required section: [source_device]")
+        daemon_section = data.get("daemon")
+        if not isinstance(daemon_section, dict):
+            raise ConfigError("Missing or invalid required section: [daemon]")
+
+        self._parse_source(source_section)
+        self._parse_daemon(daemon_section)
         self._parse_controllers(data)
         self._build_lookup(data)
 
     def _parse_source(self, section: dict[str, Any]) -> None:
-        self.source = SourceConfig(
-            name=section.get("name", ""),
-            vendor_id=int(section.get("vendor_id", 0)),
-            product_id=int(section.get("product_id", 0)),
-        )
+        try:
+            self.source = SourceConfig(
+                name=str(section.get("name", "")),
+                vendor_id=int(section.get("vendor_id", 0)),
+                product_id=int(section.get("product_id", 0)),
+            )
+        except (TypeError, ValueError) as exc:
+            raise ConfigError(f"Invalid [source_device] value: {exc}") from exc
 
     def _parse_daemon(self, section: dict[str, Any]) -> None:
+        grab_source = section.get("grab_source", True)
+        log_level = section.get("log_level", "INFO")
+        if not isinstance(grab_source, bool):
+            raise ConfigError("[daemon].grab_source must be a boolean")
+        if not isinstance(log_level, str):
+            raise ConfigError("[daemon].log_level must be a string")
         self.daemon = DaemonConfig(
-            grab_source=bool(section.get("grab_source", True)),
-            log_level=str(section.get("log_level", "INFO")).upper(),
+            grab_source=grab_source,
+            log_level=log_level.upper(),
         )
 
     def _parse_controllers(self, data: dict[str, Any]) -> None:
@@ -178,23 +197,29 @@ class EventMapper:
             if key.startswith("virtual_controller_"):
                 suffix = key.removeprefix("virtual_controller_")
                 if suffix.isdigit():
-                    controller_ids.append(int(suffix))
+                    controller_id = int(suffix)
+                    if controller_id < 1:
+                        raise ConfigError("Virtual controller indices must start at 1")
+                    controller_ids.append(controller_id)
         if not controller_ids:
             raise ConfigError("No virtual controller sections found in config")
 
         for index in sorted(controller_ids):
             key = f"virtual_controller_{index}"
             section = data.get(key)
-            if section is None:
-                continue
-            self.controllers.append(
-                ControllerConfig(
-                    index=index - 1,
-                    device_name=str(section.get("device_name", f"AirTux Virtual {index}")),
-                    vendor_id=int(section.get("vendor_id", 0x045E)),
-                    product_id=int(section.get("product_id", 0x028E)),
+            if not isinstance(section, dict):
+                raise ConfigError(f"Invalid controller section: [{key}]")
+            try:
+                self.controllers.append(
+                    ControllerConfig(
+                        index=index - 1,
+                        device_name=str(section.get("device_name", f"AirTux Virtual {index}")),
+                        vendor_id=int(section.get("vendor_id", 0x045E)),
+                        product_id=int(section.get("product_id", 0x028E)),
+                    )
                 )
-            )
+            except (TypeError, ValueError) as exc:
+                raise ConfigError(f"Invalid value in [{key}]: {exc}") from exc
 
         if not self.controllers:
             raise ConfigError("No valid virtual controller sections found in config")
@@ -208,13 +233,30 @@ class EventMapper:
             if key.startswith("virtual_controller_"):
                 suffix = key.removeprefix("virtual_controller_")
                 if suffix.isdigit():
-                    controller_ids.append(int(suffix))
+                    controller_id = int(suffix)
+                    if controller_id < 1:
+                        raise ConfigError("Virtual controller indices must start at 1")
+                    controller_ids.append(controller_id)
 
-        for ctrl_index, ctrl_num in enumerate(sorted(controller_ids)):
+        for ctrl_num in sorted(controller_ids):
             section = data.get(f"virtual_controller_{ctrl_num}", {})
+            if not isinstance(section, dict):
+                raise ConfigError(
+                    f"Invalid controller section: [virtual_controller_{ctrl_num}]"
+                )
             mapping = section.get("mapping", {})
+            if not isinstance(mapping, dict):
+                raise ConfigError(
+                    f"Invalid mapping section for virtual_controller_{ctrl_num}"
+                )
+            axes = mapping.get("axes", {})
+            buttons = mapping.get("buttons", {})
+            if not isinstance(axes, dict) or not isinstance(buttons, dict):
+                raise ConfigError(
+                    f"Invalid axes or buttons mapping for virtual_controller_{ctrl_num}"
+                )
 
-            for source_name, entry in mapping.get("axes", {}).items():
+            for source_name, entry in axes.items():
                 if isinstance(entry, dict) and entry.get("mode") == "trim_impulse":
                     modifier = entry.get("modifier_button", "BTN_TR")
                     hat = entry.get("hat", "ABS_HAT0Y")
@@ -226,7 +268,7 @@ class EventMapper:
                             f"(controller {ctrl_num} vs existing)"
                         )
                     self._lookup[key] = MappingRule(
-                        controller_index=ctrl_index,
+                        controller_index=ctrl_num - 1,
                         target_type=ecodes.EV_ABS,
                         target_code=_resolve_ecode(hat, "axis"),
                         invert=bool(entry.get("invert", False)),
@@ -255,7 +297,7 @@ class EventMapper:
                             f"(controller {ctrl_num} vs existing)"
                         )
                     self._lookup[key] = MappingRule(
-                        controller_index=ctrl_index,
+                        controller_index=ctrl_num - 1,
                         target_type=ecodes.EV_ABS,
                         target_code=_resolve_ecode(left_name, "axis"),
                         secondary_target_code=_resolve_ecode(right_name, "axis"),
@@ -278,7 +320,7 @@ class EventMapper:
                 if isinstance(entry, dict):
                     rmin, rmax = _parse_axis_range(entry)
                 self._lookup[key] = MappingRule(
-                    controller_index=ctrl_index,
+                    controller_index=ctrl_num - 1,
                     target_type=ecodes.EV_ABS,
                     target_code=target_code,
                     invert=invert,
@@ -288,7 +330,7 @@ class EventMapper:
                     range_max=rmax,
                 )
 
-            for source_name, entry in mapping.get("buttons", {}).items():
+            for source_name, entry in buttons.items():
                 source_code = _resolve_ecode(source_name, "button")
                 key = (ecodes.EV_KEY, source_code)
                 if key in self._lookup:
@@ -301,7 +343,7 @@ class EventMapper:
                     modifier = entry.get("modifier_button", "BTN_TR")
                     hat = entry.get("hat", "ABS_HAT0Y")
                     self._lookup[key] = MappingRule(
-                        controller_index=ctrl_index,
+                        controller_index=ctrl_num - 1,
                         target_type=ecodes.EV_KEY,
                         target_code=_resolve_ecode(hat, "axis"),
                         mode="trim_pulse",
@@ -317,7 +359,7 @@ class EventMapper:
                         _resolve_ecode(modifier, "button") if modifier else None
                     )
                     self._lookup[key] = MappingRule(
-                        controller_index=ctrl_index,
+                        controller_index=ctrl_num - 1,
                         target_type=ecodes.EV_KEY,
                         target_code=_resolve_ecode(hat, "axis"),
                         mode="dpad_hold",
@@ -334,7 +376,7 @@ class EventMapper:
                             f"Button {source_name!r}: modifier_hold requires target_button"
                         )
                     self._lookup[key] = MappingRule(
-                        controller_index=ctrl_index,
+                        controller_index=ctrl_num - 1,
                         target_type=ecodes.EV_KEY,
                         target_code=_resolve_ecode(target_btn, "button"),
                         mode="modifier_hold",
@@ -347,7 +389,7 @@ class EventMapper:
                     raise ConfigError(f"Invalid button entry for {source_name!r}")
                 target_code = _resolve_ecode(tgt, "button")
                 self._lookup[key] = MappingRule(
-                    controller_index=ctrl_index,
+                    controller_index=ctrl_num - 1,
                     target_type=ecodes.EV_KEY,
                     target_code=target_code,
                 )

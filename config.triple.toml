@@ -12,7 +12,7 @@ product_id = 0x7055
 grab_source = true
 log_level = "INFO"
 
-# 1) Flight stick pad
+# 1) Flight stick pad — see docs/en/mapping_velocityone_xbox.md
 [virtual_controller_1]
 device_name = "AirTux One"
 vendor_id = 0x045E

@@ -11,12 +11,15 @@ Le script ne modifie pas automatiquement `config.toml` : il imprime un extrait Ã
 from __future__ import annotations
 
 import argparse
+import logging
 import select
 import sys
 from dataclasses import dataclass
 from typing import Iterable
 
 from evdev import AbsInfo, InputDevice, ecodes, list_devices
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -78,12 +81,12 @@ def _choose_device(prompt: str, must_have: int | None = None) -> InputDevice:
                     if d is not chosen:
                         d.close()
                 return chosen
-    except BaseException:
+    except (EOFError, KeyboardInterrupt, OSError, RuntimeError):
         for d in devices:
             try:
                 d.close()
-            except Exception:
-                pass
+            except OSError as exc:
+                logger.warning("Failed to close input device %s: %s", d.path, exc)
         raise
 
 
@@ -123,7 +126,8 @@ def _read_next_control(
                 if ev.code not in absinfo_cache:
                     try:
                         absinfo_cache[ev.code] = device.absinfo(ev.code)
-                    except Exception:
+                    except OSError as exc:
+                        logger.warning("Cannot read axis metadata for %s: %s", ev.code, exc)
                         absinfo_cache[ev.code] = AbsInfo(
                             value=ev.value,
                             min=0,
@@ -268,12 +272,12 @@ def main(argv: Iterable[str] | None = None) -> int:
     finally:
         try:
             joystick.close()
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.warning("Failed to close joystick %s: %s", joystick.path, exc)
         try:
             xbox.close()
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.warning("Failed to close Xbox controller %s: %s", xbox.path, exc)
 
     _print_mapping_summary(lines_axes, lines_buttons)
     return 0
