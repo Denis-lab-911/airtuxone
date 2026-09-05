@@ -12,30 +12,14 @@ product_id = 0x7055
 grab_source = true
 log_level = "INFO"
 
-# Dual profile: throttle levers on a second Xbox pad.
+# Dual profile: flight stick on the first Xbox pad, throttle levers on the second.
 # Default profile remains config.toml + ./airtuxone.sh
 [virtual_controller_1]
-device_name = "AirTux One - Throttle"
-vendor_id = 0x045E
-product_id = 0x02A0
-
-[virtual_controller_1.mapping.axes]
-# Full stick range (±32767) so MSFS detects the axis when assigning.
-# Do not map to ABS_RX: that is H2 look on the flight pad — MSFS then
-# reports "wrong device" (mauvais périphérique).
-# invert = true on one line if that lever is reversed in MSFS.
-ABS_RZ = { target = "ABS_Y", invert = true, deadzone = 0, mode = "linear" }
-ABS_THROTTLE = { target = "ABS_RY", invert = true, deadzone = 0, mode = "linear" }
-
-[virtual_controller_1.mapping.buttons]
-
-# Same flight mapping as config.toml — see docs/en/mapping_velocityone_xbox.md
-[virtual_controller_2]
 device_name = "AirTux One"
 vendor_id = 0x045E
 product_id = 0x02A1
 
-[virtual_controller_2.mapping.axes]
+[virtual_controller_1.mapping.axes]
 # Stick — roll / pitch
 ABS_X = { target = "ABS_X", invert = false, deadzone = 4096, mode = "centered" }
 ABS_Y = { target = "ABS_Y", invert = false, deadzone = 4096, mode = "centered" }
@@ -48,7 +32,7 @@ ABS_RY = { target = "ABS_RY", invert = false, deadzone = 4096, mode = "centered"
 ABS_HAT0X = { target = "ABS_HAT0X", invert = false, deadzone = 0, mode = "passthrough" }
 ABS_HAT0Y = { target = "ABS_HAT0Y", invert = false, deadzone = 0, mode = "passthrough" }
 
-[virtual_controller_2.mapping.buttons]
+[virtual_controller_1.mapping.buttons]
 # Stick face — 1:1 A/B/X/Y (B1–B4)
 BTN_TRIGGER         = "BTN_SOUTH"    # A / B1 → A
 BTN_THUMB           = "BTN_EAST"     # B / B2 → B
@@ -66,3 +50,19 @@ BTN_TRIGGER_HAPPY6  = "BTN_THUMBL"   # bottom center — free
 BTN_TRIGGER_HAPPY7  = "BTN_START"    # bottom right → Start
 BTN_TRIGGER_HAPPY4  = "BTN_MODE"     # Xbox button → Guide
 BTN_DEAD            = "BTN_TL"       # B16 → LB
+
+# Second pad: throttle levers — see docs/en/mapping_velocityone_xbox.md
+[virtual_controller_2]
+device_name = "AirTux One - Throttle"
+vendor_id = 0x045E
+product_id = 0x02A0
+
+[virtual_controller_2.mapping.axes]
+# Full stick range (±32767) so MSFS detects the axis when assigning.
+# Do not map to ABS_RX: that is H2 look on the flight pad — MSFS then
+# reports "wrong device" (mauvais périphérique).
+# invert = true on one line if that lever is reversed in MSFS.
+ABS_RZ = { target = "ABS_Y", invert = true, deadzone = 0, mode = "linear" }
+ABS_THROTTLE = { target = "ABS_RY", invert = true, deadzone = 0, mode = "linear" }
+
+[virtual_controller_2.mapping.buttons]

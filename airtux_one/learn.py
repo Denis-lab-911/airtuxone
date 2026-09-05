@@ -180,11 +180,11 @@ def _print_mapping_summary(lines_axes: list[str], lines_buttons: list[str]) -> N
     print("Résumé mapping (extrait TOML à copier)")
     print("=" * 72)
     if lines_axes:
-        print("\n[virtual_controller_2.mapping.axes]")
+        print("\n[virtual_controller_1.mapping.axes]")
         for line in lines_axes:
             print(line)
     if lines_buttons:
-        print("\n[virtual_controller_2.mapping.buttons]")
+        print("\n[virtual_controller_1.mapping.buttons]")
         for line in lines_buttons:
             print(line)
     print()

@@ -152,7 +152,7 @@ def _print_summary(
 
     if axes or buttons:
         print("\n--- Extrait config.toml suggéré (à copier/adapter) ---")
-        print("\n[virtual_controller_2.mapping.axes]")
+        print("\n[virtual_controller_1.mapping.axes]")
         for code in sorted(axes):
             stats = axes[code]
             if stats.name in ("ABS_THROTTLE", "ABS_RZ", "ABS_Z", "ABS_RUDDER"):
@@ -168,7 +168,7 @@ def _print_summary(
                     f"# ajuster target"
                 )
         if buttons:
-            print("\n[virtual_controller_2.mapping.buttons]")
+            print("\n[virtual_controller_1.mapping.buttons]")
             xbox = ["BTN_SOUTH", "BTN_EAST", "BTN_NORTH", "BTN_WEST",
                     "BTN_TL", "BTN_TR", "BTN_SELECT", "BTN_START"]
             for i, name in enumerate(sorted(buttons)):

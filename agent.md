@@ -9,7 +9,7 @@ Développer un démon Linux (AirTux One) qui intercepte les entrées d'un Turtle
 ```
 airtuxone/
 ├── agent.md
-├── config.toml           # Mapping TOML (section virtual_controller_2)
+├── config.toml           # Mapping TOML (section virtual_controller_1)
 ├── config.dual.toml      # Profil expérimental 2 pads (manche + gaz)
 ├── airtuxone.sh          # Lanceur profil par défaut
 ├── airtuxone-dual.sh     # Lanceur profil dual (AIRTUX_CONFIG)
@@ -69,3 +69,5 @@ airtuxone/
 | 2026-09-05 | Durcissement des invariants et fermetures périphériques ; remplacement des captures d'exceptions génériques |
 | 2026-09-05 | Permissions réduites : accès VelocityOne via `airtux-input`, accès uinput via `uinput`, sans ajout au groupe global `input` |
 | 2026-09-05 | Documentation EN/FR synchronisée pour profils base/dual/triple, sécurité et maintenance des dépendances |
+| 2026-09-05 | Profil base simplifié : suppression de la manette leurre, manche AirTux One en `virtual_controller_1` |
+| 2026-09-05 | Profil dual réordonné : manche AirTux One en première manette, gaz en seconde manette |

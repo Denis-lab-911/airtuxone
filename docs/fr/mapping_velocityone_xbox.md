@@ -92,7 +92,7 @@ Correspondance **1:1** — le démon maintient **LB** + le bouton face tant que 
 
 ## Implémentation AirTux One
 
-Ce mapping est appliqué dans [`config.toml`](../../config.toml), section `[virtual_controller_2]` (manette virtuelle **AirTux One**).
+Ce mapping est appliqué dans [`config.toml`](../../config.toml), section `[virtual_controller_1]` (manette virtuelle **AirTux One**).
 
 | Mode TOML | Usage |
 | :--- | :--- |
