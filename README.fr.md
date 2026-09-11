@@ -96,6 +96,72 @@ Utilisez les profils spécialisés selon le type d'avion :
 | Dual (`config.dual.toml`) | 1 : manche **AirTux One** ; 2 : **AirTux One - Throttle** |
 | Triple (`config.triple.toml`) | 1 : manche **AirTux One** ; 2 : **Throttle 1** ; 3 : **Throttle 2** |
 
+### Vue d'ensemble du profil triple
+
+```text
+                               AIRTUX ONE TRIPLE (MAPPING)
+
+   +---------------------------------------+
+   |   TURTLE BEACH VELOCITYONE (PC Mode)  |
+   +---------------------------------------+
+                      |
+                      | (evdev)
+                      v
+   +---------------------------------------+
+   |           AIRTUX ONE DAEMON           |
+   +---------------------------------------+
+                      |
+                      | (uinput)
+        +-------------+-------------+
+        |             |             |
+        v             v             v
+  [Manette 1]   [Manette 2]   [Manette 3]
+```
+
+### Vue détaillée du mapping
+
+```text
+========================================================================================
+SOURCE : JOYSTICK PHYSICAL LAYOUT               MANETTES VIRTUELLES XBOX CIBLES
+========================================================================================
+
+--- TÊTE DU MANCHE (STICK HEAD) ---
+┌───────────────────────────────────────┐
+│ [H1 Hat] Chapeau chinois              │───────► Manette 1 : Croix directionnelle (D-Pad)
+│ [H2 Stick] Mini-stick analogique      │───────► Manette 1 : Stick Droit (Look / Caméra)
+│                                       │
+│ [B1] Gâchette principale              │───────► Manette 1 : Bouton A
+│ [B2] Bouton pouce gauche              │───────► Manette 1 : Bouton B
+│ [B3] Bouton pouce droit               │───────► Manette 1 : Bouton X
+│ [B4] Bouton sommet                    │───────► Manette 1 : Bouton Y
+│                                       │
+│ [B5] Bouton supérieur haut            │───────► Manette 1 : Combo [LB + A]
+│ [B6] Bouton supérieur bas             │───────► Manette 1 : Combo [LB + B]
+│ [B7] Bouton latéral haut              │───────► Manette 1 : Combo [LB + X]
+│ [B8] Bouton latéral bas               │───────► Manette 1 : Combo [LB + Y]
+│ [Gâchette sec.]                       │───────► Manette 1 : Bouton RB
+└───────────────────────────────────────┘
+
+--- CORPS & BASE (AXES & BOUTONS) ---
+┌───────────────────────────────────────┐
+│ Axe X (Axe horizontal du manche)      │───────► Manette 1 : Stick Gauche X (Roll)
+│ Axe Y (Axe vertical du manche)        │───────► Manette 1 : Stick Gauche Y (Pitch)
+│ Axe Z (Torsion du manche)             │───────► Manette 1 : Gâchettes LT / RT (Rudder)
+│                                       │
+│ [B16] Bouton base                     │───────► Manette 1 : Bouton LB (Modifier)
+│ [Bas-Gauche] Bouton base              │───────► Manette 1 : Bouton Back / Select
+│ [Bas-Centre] Bouton base              │───────► Manette 1 : Bouton L3 (Thumb L)
+│ [Bas-Droite] Bouton base              │───────► Manette 1 : Bouton Start
+│ [Logo Xbox] Bouton central            │───────► Manette 1 : Bouton Guide / Xbox
+└───────────────────────────────────────┘
+
+--- BLOC MANETTES DE GAZ (THROTTLE QUADRANT) ---
+┌───────────────────────────────────────┐
+│ Levier 1 (Axe RZ)                     │───────► Manette 2 : Stick Gauche Y (Throttle 1)
+│ Levier 2 (Axe Throttle)               │───────► Manette 3 : Stick Droit Y (Throttle 2)
+└───────────────────────────────────────┘
+```
+
 Le mapping MSFS est documenté dans [`docs/fr/mapping_velocityone_xbox.md`](docs/fr/mapping_velocityone_xbox.md).
 
 ### Mode PC obligatoire

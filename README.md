@@ -96,6 +96,72 @@ Use the specialized profiles for particular aircraft types:
 | Dual (`config.dual.toml`) | 1: **AirTux One** flight stick; 2: **AirTux One - Throttle** |
 | Triple (`config.triple.toml`) | 1: **AirTux One** flight stick; 2: **Throttle 1**; 3: **Throttle 2** |
 
+### Triple profile overview
+
+```text
+                               AIRTUX ONE TRIPLE (MAPPING)
+
+   +---------------------------------------+
+   |   TURTLE BEACH VELOCITYONE (PC Mode)  |
+   +---------------------------------------+
+                      |
+                      | (evdev)
+                      v
+   +---------------------------------------+
+   |           AIRTUX ONE DAEMON           |
+   +---------------------------------------+
+                      |
+                      | (uinput)
+        +-------------+-------------+
+        |             |             |
+        v             v             v
+  [Controller 1] [Controller 2] [Controller 3]
+```
+
+### Detailed mapping view
+
+```text
+========================================================================================
+SOURCE: JOYSTICK PHYSICAL LAYOUT                 TARGET VIRTUAL XBOX CONTROLLERS
+========================================================================================
+
+--- STICK HEAD ---
+┌───────────────────────────────────────┐
+│ [H1 Hat] POV hat                      │───────► Controller 1: D-pad
+│ [H2 Stick] Analog mini-stick          │───────► Controller 1: Right stick (look / camera)
+│                                       │
+│ [B1] Main trigger                     │───────► Controller 1: A button
+│ [B2] Left thumb button                │───────► Controller 1: B button
+│ [B3] Right thumb button               │───────► Controller 1: X button
+│ [B4] Top button                       │───────► Controller 1: Y button
+│                                       │
+│ [B5] Upper top button                 │───────► Controller 1: Combo [LB + A]
+│ [B6] Upper bottom button              │───────► Controller 1: Combo [LB + B]
+│ [B7] Upper side button                │───────► Controller 1: Combo [LB + X]
+│ [B8] Lower side button                │───────► Controller 1: Combo [LB + Y]
+│ [Secondary trigger]                   │───────► Controller 1: RB button
+└───────────────────────────────────────┘
+
+--- BODY & BASE (AXES & BUTTONS) ---
+┌───────────────────────────────────────┐
+│ X axis (stick horizontal axis)        │───────► Controller 1: Left stick X (roll)
+│ Y axis (stick vertical axis)          │───────► Controller 1: Left stick Y (pitch)
+│ Z axis (stick twist)                  │───────► Controller 1: LT / RT triggers (rudder)
+│                                       │
+│ [B16] Base button                     │───────► Controller 1: LB button (modifier)
+│ [Bottom-left] Base button             │───────► Controller 1: Back / Select button
+│ [Bottom-center] Base button           │───────► Controller 1: L3 button (left thumb)
+│ [Bottom-right] Base button            │───────► Controller 1: Start button
+│ [Xbox logo] Center button             │───────► Controller 1: Guide / Xbox button
+└───────────────────────────────────────┘
+
+--- THROTTLE QUADRANT ---
+┌───────────────────────────────────────┐
+│ Lever 1 (RZ axis)                     │───────► Controller 2: Left stick Y (Throttle 1)
+│ Lever 2 (Throttle axis)               │───────► Controller 3: Right stick Y (Throttle 2)
+└───────────────────────────────────────┘
+```
+
 MSFS mapping is documented in [`docs/en/mapping_velocityone_xbox.md`](docs/en/mapping_velocityone_xbox.md).
 
 ### PC mode required
