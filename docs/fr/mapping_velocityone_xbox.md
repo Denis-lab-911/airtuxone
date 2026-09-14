@@ -2,7 +2,7 @@
 
 Ce document récapitule le mapping pour transformer votre Turtle Beach VelocityOne Flightstick en manette Xbox virtuelle pour Microsoft Flight Simulator (MSFS) via GeForce NOW.
 
-Il décrit le profil de base, [`config.toml`](../../config.toml). Les profils dual et triple conservent le mapping de vol mais dirigent les leviers de gaz vers des manettes virtuelles distinctes ; voir le tableau des profils dans le [README](../../README.fr.md).
+Il décrit le profil triple, [`config.triple.toml`](../../config.triple.toml). Le manche et les boutons sont exposés par la manette virtuelle 1, tandis que les deux leviers de gaz sont dirigés vers les manettes virtuelles 2 et 3 ; voir le tableau des profils dans le [README](../../README.fr.md).
 
 ## Tableau de Synthèse du Mapping
 
@@ -17,13 +17,13 @@ Il décrit le profil de base, [`config.toml`](../../config.toml). Les profils du
 | **Mini-stick H2 vertical** | `ABS_RY` | Stick Droit - Vertical | **Regard vertical** | Analogique |
 | **Chapeau chinois (POV - H1)** | `ABS_HAT0X/Y` | Croix directionnelle (D-Pad) | **Menus / raccourcis** | Numérique |
 
-### Axes non mappés (volontaire)
+### Axes des manettes de gaz
 
-| Élément | Code evdev | Raison |
-| :--- | :--- | :--- |
-| Levier gaz gauche | `ABS_RZ` | Non mappé — poussée gérée autrement dans MSFS |
-| Levier gaz droit | `ABS_THROTTLE` | Non mappé |
-| Molette trim | `ABS_RUDDER` | Non mappé |
+| Élément physique (VelocityOne) | Code evdev source | Manette virtuelle | Cible Xbox | Fonction MSFS recommandée |
+| :--- | :--- | :--- | :--- | :--- |
+| Levier gaz 1 | `ABS_RZ` | **Manette 2** — AirTuxOne - Throttle 1 | `ABS_Y` (stick gauche vertical, inversé) | **Poussée 1** |
+| Levier gaz 2 | `ABS_THROTTLE` | **Manette 3** — AirTuxOne - Throttle 2 | `ABS_RY` (stick droit vertical, inversé) | **Poussée 2** |
+| Molette trim | `ABS_RUDDER` | Aucune | Non mappée | À configurer séparément |
 
 ### Boutons face (A/B/X/Y)
 
@@ -68,7 +68,7 @@ Correspondance **1:1** — le démon maintient **LB** + le bouton face tant que 
 ## Notes importantes de configuration
 
 1. **H2 → stick droit :** mini-stick tête = regard horizontal + vertical dans MSFS (RS X / RS Y).
-2. **Gaz :** leviers `ABS_RZ` / `ABS_THROTTLE` non mappés — configurez la poussée via clavier/souris ou profil MSFS sans axe gaz manette.
+2. **Gaz :** dans le profil triple, `ABS_RZ` est envoyé vers le stick gauche vertical de la manette 2 et `ABS_THROTTLE` vers le stick droit vertical de la manette 3. Les deux axes sont inversés (`invert = true`) et utilisent le mode `linear`.
 3. **Torsion / palonnier :** mode `split_triggers` (LT/RT analogiques uniquement). Ajustez `deadzone` si le palonnier dérive.
 4. **Courbes de sensibilité :** réduisez la réactivité entre **-20 % et -35 %** sur roulis et tangage.
 
@@ -90,9 +90,17 @@ Correspondance **1:1** — le démon maintient **LB** + le bouton face tant que 
 | Back | Select (bas gauche) |
 | Start | Start (bas droit) |
 
-## Implémentation AirTux One
+## Implémentation AirTuxOne
 
-Ce mapping est appliqué dans [`config.toml`](../../config.toml), section `[virtual_controller_1]` (manette virtuelle **AirTux One**).
+Ce mapping est appliqué dans [`config.triple.toml`](../../config.triple.toml), avec trois périphériques virtuels :
+
+| Section TOML | Périphérique virtuel | Mapping |
+| :--- | :--- | :--- |
+| `[virtual_controller_1]` | **AirTuxOne** | Manche, H1/H2 et boutons |
+| `[virtual_controller_2]` | **AirTuxOne - Throttle 1** | `ABS_RZ` → `ABS_Y` (inversé) |
+| `[virtual_controller_3]` | **AirTuxOne - Throttle 2** | `ABS_THROTTLE` → `ABS_RY` (inversé) |
+
+Le mapping détaillé du manche ci-dessus concerne la section `[virtual_controller_1]`.
 
 | Mode TOML | Usage |
 | :--- | :--- |
@@ -100,7 +108,7 @@ Ce mapping est appliqué dans [`config.toml`](../../config.toml), section `[virt
 | `split_triggers` | Torsion → LT/RT |
 | `modifier_hold` | B5–B8 → LB + bouton face maintenu |
 | `passthrough` | POV H1 / D-Pad |
-| `linear` | Plage source complète vers un axe de stick Xbox bipolaire |
+| `linear` | Plage source complète vers un axe de stick Xbox bipolaire ; utilisé pour les deux leviers de gaz |
 | `linear_positive` | Plage source complète vers un axe de stick positif |
 | `linear_trigger` | Plage source complète vers une gâchette 0–255 |
 | `centered_trigger` | Axe source centré vers une gâchette 0–255, neutre à 128 |

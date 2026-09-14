@@ -2,7 +2,7 @@
 
 This document summarizes the mapping that turns a Turtle Beach VelocityOne Flightstick into a virtual Xbox controller for Microsoft Flight Simulator (MSFS) via GeForce NOW.
 
-It describes the base profile, [`config.toml`](../../config.toml). The dual and triple profiles keep the flight mapping but route throttle levers to separate virtual controllers; see the profile table in the [README](../../README.md).
+It describes the triple profile, [`config.triple.toml`](../../config.triple.toml). The stick and buttons are exposed by virtual controller 1, while the two throttle levers are routed to virtual controllers 2 and 3; see the profile table in the [README](../../README.md).
 
 ## Mapping Summary
 
@@ -17,13 +17,13 @@ It describes the base profile, [`config.toml`](../../config.toml). The dual and 
 | **H2 mini-stick vertical** | `ABS_RY` | Right stick — vertical | **Look up/down** | Analog |
 | **POV hat (H1)** | `ABS_HAT0X/Y` | D-Pad | **Menus / shortcuts** | Digital |
 
-### Intentionally unmapped axes
+### Throttle controller axes
 
-| Control | evdev code | Reason |
-| :--- | :--- | :--- |
-| Left throttle lever | `ABS_RZ` | Not mapped — handle thrust elsewhere in MSFS |
-| Right throttle lever | `ABS_THROTTLE` | Not mapped |
-| Trim wheel | `ABS_RUDDER` | Not mapped |
+| Physical control (VelocityOne) | Source evdev code | Virtual controller | Xbox target | Suggested MSFS function |
+| :--- | :--- | :--- | :--- | :--- |
+| Throttle lever 1 | `ABS_RZ` | **Controller 2** — AirTuxOne - Throttle 1 | `ABS_Y` (left stick vertical, inverted) | **Throttle 1** |
+| Throttle lever 2 | `ABS_THROTTLE` | **Controller 3** — AirTuxOne - Throttle 2 | `ABS_RY` (right stick vertical, inverted) | **Throttle 2** |
+| Trim wheel | `ABS_RUDDER` | None | Unmapped | Configure separately |
 
 ### Face buttons (A/B/X/Y)
 
@@ -68,7 +68,7 @@ It describes the base profile, [`config.toml`](../../config.toml). The dual and 
 ## Configuration notes
 
 1. **H2 → right stick:** head mini-stick = horizontal + vertical look in MSFS (RS X / RS Y).
-2. **Throttle:** `ABS_RZ` / `ABS_THROTTLE` levers are not mapped — configure thrust via keyboard/mouse or an MSFS profile without a gamepad throttle axis.
+2. **Throttle:** in the triple profile, `ABS_RZ` is sent to the left stick vertical axis of controller 2 and `ABS_THROTTLE` to the right stick vertical axis of controller 3. Both axes are inverted (`invert = true`) and use `linear` mode.
 3. **Twist / rudder:** `split_triggers` mode (analog LT/RT only). Adjust `deadzone` in `config.toml` if the rudder drifts.
 4. **Sensitivity curves:** reduce responsiveness by **-20% to -35%** on roll and pitch.
 
@@ -90,9 +90,17 @@ It describes the base profile, [`config.toml`](../../config.toml). The dual and 
 | Back | Select (bottom left) |
 | Start | Start (bottom right) |
 
-## AirTux One implementation
+## AirTuxOne implementation
 
-This mapping is applied in [`config.toml`](../../config.toml), section `[virtual_controller_1]` (virtual controller **AirTux One**).
+This mapping is applied in [`config.triple.toml`](../../config.triple.toml), using three virtual devices:
+
+| TOML section | Virtual device | Mapping |
+| :--- | :--- | :--- |
+| `[virtual_controller_1]` | **AirTuxOne** | Stick, H1/H2, and buttons |
+| `[virtual_controller_2]` | **AirTuxOne - Throttle 1** | `ABS_RZ` → `ABS_Y` (inverted) |
+| `[virtual_controller_3]` | **AirTuxOne - Throttle 2** | `ABS_THROTTLE` → `ABS_RY` (inverted) |
+
+The detailed stick mapping above applies to `[virtual_controller_1]`.
 
 | TOML mode | Usage |
 | :--- | :--- |
@@ -100,7 +108,7 @@ This mapping is applied in [`config.toml`](../../config.toml), section `[virtual
 | `split_triggers` | Twist → LT/RT |
 | `modifier_hold` | B5–B8 → LB + face button held |
 | `passthrough` | POV H1 / D-Pad |
-| `linear` | Full source range mapped to a bipolar Xbox stick axis |
+| `linear` | Full source range mapped to a bipolar Xbox stick axis; used for both throttle levers |
 | `linear_positive` | Full source range mapped to a positive stick axis |
 | `linear_trigger` | Full source range mapped to a 0–255 trigger |
 | `centered_trigger` | Centered source axis mapped to one 0–255 trigger, neutral at 128 |

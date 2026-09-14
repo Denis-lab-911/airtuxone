@@ -1,8 +1,8 @@
-# Log de l'agent — AirTux One
+# Log de l'agent — AirTuxOne
 
 ## [Objectif Général]
 
-Développer un démon Linux (AirTux One) qui intercepte les entrées d'un TurtleBeach VelocityOne Flightstick via `evdev` et les traduit vers une **manette Xbox 360 virtuelle** via `uinput`. Objectif : permettre à Google Chrome et GeForce NOW de piloter Microsoft Flight Simulator avec le manche, les gaz et les boutons du stick.
+Développer un démon Linux (AirTuxOne) qui intercepte les entrées d'un TurtleBeach VelocityOne Flightstick via `evdev` et les traduit vers une **manette Xbox 360 virtuelle** via `uinput`. Objectif : permettre à Google Chrome et GeForce NOW de piloter Microsoft Flight Simulator avec le manche, les gaz et les boutons du stick.
 
 ## [Architecture Validée]
 
@@ -39,13 +39,13 @@ airtuxone/
 - [x] `discover.py` — assistant de découverte des entrées
 - [x] Mapping MSFS VelocityOne → Xbox (`config.toml`, modes `split_triggers`, `dpad_hold`, `linear_positive`)
 - [x] Trim pitch via B5/B6 (`BTN_TOP2`, `BTN_PINKIE`) → RB + D-Pad maintenu
-- [x] Contournement Chrome : masquage js0 physique (udev), sélection manette **AirTux One** dans le navigateur
+- [x] Contournement Chrome : masquage js0 physique (udev), sélection manette **AirTuxOne** dans le navigateur
 - [x] Documentation : `README.md`, `README.fr.md`, `docs/en/`, `docs/fr/`
 
 ## [Tâches Restantes]
 
 - [x] Résolution conflits mapping : RB réservé trim, volets B8→B, suppression BASE3/4, boutons plateau
-- [ ] Test MSFS / GeForce NOW avec mapping définitif
+- [x] Test MSFS / GeForce NOW avec mapping définitif
 
 ## [Journal des Modifications]
 
@@ -69,5 +69,5 @@ airtuxone/
 | 2026-09-05 | Durcissement des invariants et fermetures périphériques ; remplacement des captures d'exceptions génériques |
 | 2026-09-05 | Permissions réduites : accès VelocityOne via `airtux-input`, accès uinput via `uinput`, sans ajout au groupe global `input` |
 | 2026-09-05 | Documentation EN/FR synchronisée pour profils base/dual/triple, sécurité et maintenance des dépendances |
-| 2026-09-05 | Profil base simplifié : suppression de la manette leurre, manche AirTux One en `virtual_controller_1` |
-| 2026-09-05 | Profil dual réordonné : manche AirTux One en première manette, gaz en seconde manette |
+| 2026-09-05 | Profil base simplifié : suppression de la manette leurre, manche AirTuxOne en `virtual_controller_1` |
+| 2026-09-05 | Profil dual réordonné : manche AirTuxOne en première manette, gaz en seconde manette |
