@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="airtuxone_logo.png" alt="AirTux One" width="240">
+  <img src="airtuxone_logo.png" alt="AirTuxOne" width="240">
 </p>
 
 <p align="center">
@@ -10,9 +10,21 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3"></a>
 </p>
 
-# AirTux One
+# AirTuxOne
 
-Linux daemon that reads a **Turtle Beach VelocityOne Flightstick** via `evdev` and emits a **virtual Xbox 360 controller** via `uinput`. Built for Firefox and GeForce NOW to fly Microsoft Flight Simulator with the stick and its buttons.
+AirTuxOne is a Linux daemon that maps a **Turtle Beach VelocityOne Flightstick** to one or more **virtual Xbox 360 controllers**. It is designed to fly Microsoft Flight Simulator with the stick, its buttons, and throttle levers, even from an older Linux PC, using a cloud gaming service such as GeForce NOW and a Firefox browser.
+
+## Why AirTuxOne?
+
+AirTuxOne was designed to address the following challenge: how can you play Flight Simulator 2020 or 2024 from a relatively old PC that does not have enough power to run the game, on a Linux system, while still enjoying the comfort of a joystick?
+
+The first answer was to use a cloud gaming service. This provides the power needed for a game such as Flight Simulator while streaming the rendered display to a PC that only needs to show the stream. With this approach, it is easy to play the simulator with a keyboard and mouse or a standard Xbox controller, both recognized by the cloud gaming service and the game. But it was still frustrating not to be able to play with a joystick better suited to a flight simulator.
+
+The second answer was therefore to make the joystick appear as one or more virtual Xbox controllers, so that the various buttons, axes, and throttle levers can then be configured directly in the simulator.
+
+Warning:
+- Firefox and GeForce NOW are third-party solutions. The AirTuxOne author is not responsible for their operation.
+- GeForce NOW requires a paid subscription.
 
 ## Quick install
 
@@ -41,7 +53,7 @@ The `setup.sh` script automates:
 
 ### Skip apt install
 
-If Mint's update manager locks apt:
+If the APT update manager (`aptk`) locks apt:
 
 ```bash
 ./setup.sh --skip-apt
@@ -75,12 +87,14 @@ sudo usermod -aG airtux-input,uinput $USER
 
 ## Configuration
 
-The base mapping lives in [`config.toml`](config.toml). **No axis or button is hardcoded in Python.**
+The base mapping connects the joystick and its buttons to a single virtual Xbox controller. In this configuration, the joystick's throttle levers cannot be mapped. The base mapping is defined in [`config.toml`](config.toml). **Note: no axis or button is hardcoded in the Python code.**
 
-Use the specialized profiles for particular aircraft types:
+To use the joystick's throttle levers, use the specialized profiles for the aircraft type:
 
-- [`config.dual.toml`](config.dual.toml): recommended profile for airliners, with a second virtual pad for throttle management
-- [`config.triple.toml`](config.triple.toml): profile for multi-engine aircraft / helicopters, with one virtual pad for each throttle lever
+- [`config.dual.toml`](config.dual.toml): recommended profile when a single throttle controller is enough. This profile creates:
+  - one controller for the main joystick axis and its primary buttons;
+  - a second virtual controller for throttle management.
+- [`config.triple.toml`](config.triple.toml): profile for single-engine aircraft, twin-engine aircraft, and helicopters, with a separate virtual controller for each throttle lever, allowing both throttle levers to be used.
 
 | Section | Role |
 |---------|------|
@@ -92,9 +106,9 @@ Use the specialized profiles for particular aircraft types:
 
 | Profile | Controller layout |
 |---------|-------------------|
-| Base (`config.toml`) | 1: **AirTux One** flight stick |
-| Dual (`config.dual.toml`) | 1: **AirTux One** flight stick; 2: **AirTux One - Throttle** |
-| Triple (`config.triple.toml`) | 1: **AirTux One** flight stick; 2: **Throttle 1**; 3: **Throttle 2** |
+| Base (`config.toml`) | 1: **AirTuxOne** flight stick |
+| Dual (`config.dual.toml`) | 1: **AirTuxOne** flight stick; 2: **AirTuxOne - Throttle** |
+| Triple (`config.triple.toml`) | 1: **AirTuxOne** flight stick; 2: **Throttle 1**; 3: **Throttle 2** |
 
 ### Triple profile overview
 
@@ -166,7 +180,7 @@ MSFS mapping is documented in [`docs/en/mapping_velocityone_xbox.md`](docs/en/ma
 
 ### PC mode required
 
-The VelocityOne ships in **Xbox mode**. Under Linux, the **`xpad`** driver exposes throttle levers as discrete values only (`0`, `1`, `32768`). **Switch to PC mode** on the stick OLED (Configurator → Input Mode → PC), then verify with `./setup.sh --check` and `evtest`.
+The VelocityOne joystick starts in **Xbox mode** by default. Under Linux, the **`xpad`** driver exposes throttle levers as discrete values only (`0`, `1`, `32768`). **Switch to PC mode** on the stick OLED (Configurator → Input Mode → PC), then verify with `./setup.sh --check` and `evtest`.
 
 ### Discover evdev codes
 
@@ -189,66 +203,51 @@ export AIRTUX_CONFIG=/path/to/config.toml
 
 ## Running the daemon
 
+The recommended launch procedure is as follows:
+
+1) Open a terminal
+2) Launch the AirTuxOne script, choosing the one-, two-, or three-controller profile
+3) Open your browser to access the streaming service and the game
+4) Launch the streaming service and then the game
+
+**Command to launch the "one virtual controller" profile:**
+
 ```bash
 ./airtuxone.sh
 ```
 
-**Firefox is the recommended browser for multi-controller profiles.**
-
-The multi-pad profiles (dual or triple) are designed for **Firefox + GeForce NOW**. They do not behave reliably in **Chrome** for this specific setup, where the extra virtual controllers are not exposed consistently.
-
-**Dual pads (recommended for airliners):** throttle levers on a second virtual Xbox controller. This is the default profile for airliners and the most stable choice for MSFS / GeForce NOW.
+**Command to launch the _dual_ "two virtual controllers" profile** (one throttle lever on a second virtual Xbox controller):
 
 ```bash
 ./airtuxone-dual.sh
 ```
 
-**Triple pads (for prop aircraft / helicopters / twin-engine aircraft):** separate each throttle lever on its own virtual Xbox controller so GeForce NOW/MSFS sees distinct devices for throttle 1 and throttle 2.
+Warning: Firefox is the recommended browser for multi-controller profiles.
+
+Note: the multi-controller profiles (dual or triple) are designed and tested for **Firefox + GeForce NOW**. They are not reliable in **Chrome** for this specific setup, where additional virtual controllers are not always exposed correctly. The profiles have not been tested with other browsers, streaming services, or games.
+
+**Command to launch the _triple_ three-controller profile** (two separate throttle levers on distinct virtual Xbox controllers):
 
 ```bash
 ./airtuxone-triple.sh
 ```
 
-Expected pads: **AirTux One** (stick), **AirTux One - Throttle 1** (first lever), and **AirTux One - Throttle 2** (second lever). Config: [`config.triple.toml`](config.triple.toml).
+**Important:** the _triple_ profile is required for GeForce NOW and MSFS to see distinct devices for **Throttle 1** and **Throttle 2**. This makes it possible to use both analog throttle levers on the joystick.
 
-In MSFS: filter on the specific pad name before assigning (otherwise “wrong device”). Bind **Throttle 1** to the first pad and **Throttle 2** to the second pad, then leave the flight stick pad for roll / pitch / look only. Keep each throttle on a stick axis, not on the analog trigger axes, to match the stable dual profile behavior and avoid browser/UI drift at idle.
+## Stopping the daemon
 
-Or manually:
+Clean shutdown: `Ctrl+C` or `kill -TERM <pid>` in the terminal where the daemon is running.
 
-```bash
-source .venv/bin/activate
-python -m airtux_one.core
-```
+## Using virtual controllers in MSFS
 
-Clean shutdown: `Ctrl+C` or `kill -TERM <pid>`.
-
-**GeForce NOW order:** start the daemon **before** opening Firefox / GeForce NOW.
-
-## User systemd service
-
-Create `~/.config/systemd/user/airtux-one.service`:
-
-```ini
-[Unit]
-Description=AirTux One flight stick mapper
-After=graphical-session.target
-
-[Service]
-ExecStart=/path/to/airtuxone/.venv/bin/python -m airtux_one.core
-WorkingDirectory=/path/to/airtuxone
-Restart=on-failure
-Environment=AIRTUX_CONFIG=/path/to/airtuxone/config.toml
-
-[Install]
-WantedBy=default.target
-```
+In MSFS, moving the different axes or buttons allows the game to detect the different virtual controllers (for example, "Controller 1", "Controller 2", and "Controller 3" when using the _triple_ profile).
 
 ## Verification
 
 ### Virtual controller (evtest / jstest)
 
 ```bash
-evtest    # select « AirTux One »
+evtest    # select « AirTuxOne »
 jstest /dev/input/jsN
 ```
 
@@ -256,37 +255,26 @@ jstest /dev/input/jsN
 
 1. Start the daemon first
 2. Use **Firefox**
-3. Select **AirTux One** (`vendor 045e`, `product 02a1`) in the tester or MSFS
+3. Select **AirTuxOne** (`vendor 045e`, `product 02a1`) in the tester (for example: https://hardwaretester.com/gamepad) or MSFS
 
 ## Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
-| `Device or resource busy` on startup | Close jstest/evtest and Chrome tabs (gamepad-tester, GFN); restart `./airtuxone.sh` |
+| `Device or resource busy` on startup | Close jstest/evtest and Firefox tabs; restart `./airtuxone.sh` or one of its dual/triple variants |
 | `Permission denied` on `/dev/input/*` | `./setup.sh` or `sudo usermod -aG airtux-input $USER` + re-login |
 | `Permission denied` on `/dev/uinput` | `./setup.sh` + re-login |
 | Source device not found | Plug in VelocityOne; `./setup.sh --check`; **PC mode** on stick |
 | Throttle not analog (evtest: 0, 1, 32768) | Xbox mode active — switch to **PC mode** |
-| Wrong controller in browser | Select **AirTux One** (`045e:02a1`) |
+| Wrong controller in browser | Select **AirTuxOne** (`045e:02a1`) |
 | Wrong axis codes | `python -m airtux_one.discover` then update `config.toml` |
 
 ## Security
 
 - Do **not** run the daemon as root.
 - Use only the dedicated `airtux-input` and `uinput` groups installed by `./setup.sh`.
-- `airtux-input` is limited to the VelocityOne; do not add users to the global `input` group for AirTux One. Existing members can leave it with `sudo gpasswd -d $USER input` only after confirming no other application needs it.
+- `airtux-input` is limited to the VelocityOne; do not add users to the global `input` group for AirTuxOne. Existing members can leave it with `sudo gpasswd -d $USER input` only after confirming no other application needs it.
 - Exclusive grab (`grab_source`) blocks other readers of the physical stick.
-
-## Dependency maintenance
-
-Before a release, create a fresh virtual environment and run:
-
-```bash
-pip install --upgrade -r requirements.txt
-pip check
-pip index versions evdev
-pip-audit -r requirements.txt
-```
 
 ## Project layout
 
@@ -317,6 +305,36 @@ airtuxone/
     ├── discover.py
     ├── learn.py
     └── mapper.py
+```
+
+## Advanced user
+
+This is an optional setup intended to enable automatic startup of the AirTuxOne script when a graphical session begins. It does not select a profile by itself: you must point it to the configuration matching the profile you want to use (`config.toml`, `config.dual.toml`, or `config.triple.toml`).
+
+### Automatic startup with systemd
+
+Create `~/.config/systemd/user/airtux-one.service`:
+
+```ini
+[Unit]
+Description=AirTuxOne flight stick mapper
+After=graphical-session.target
+
+[Service]
+ExecStart=/path/to/airtuxone/.venv/bin/python -m airtux_one.core
+WorkingDirectory=/path/to/airtuxone
+Restart=on-failure
+Environment=AIRTUX_CONFIG=/path/to/airtuxone/config.toml
+
+[Install]
+WantedBy=default.target
+```
+
+For a dual or triple profile, replace `config.toml` with `config.dual.toml` or `config.triple.toml` in the `Environment` variable, then enable the service with:
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now airtux-one.service
 ```
 
 ## License

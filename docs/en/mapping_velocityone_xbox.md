@@ -21,8 +21,8 @@ It describes the triple profile, [`config.triple.toml`](../../config.triple.toml
 
 | Physical control (VelocityOne) | Source evdev code | Virtual controller | Xbox target | Suggested MSFS function |
 | :--- | :--- | :--- | :--- | :--- |
-| Throttle lever 1 | `ABS_RZ` | **Controller 2** — AirTux One - Throttle 1 | `ABS_Y` (left stick vertical, inverted) | **Throttle 1** |
-| Throttle lever 2 | `ABS_THROTTLE` | **Controller 3** — AirTux One - Throttle 2 | `ABS_RY` (right stick vertical, inverted) | **Throttle 2** |
+| Throttle lever 1 | `ABS_RZ` | **Controller 2** — AirTuxOne - Throttle 1 | `ABS_Y` (left stick vertical, inverted) | **Throttle 1** |
+| Throttle lever 2 | `ABS_THROTTLE` | **Controller 3** — AirTuxOne - Throttle 2 | `ABS_RY` (right stick vertical, inverted) | **Throttle 2** |
 | Trim wheel | `ABS_RUDDER` | None | Unmapped | Configure separately |
 
 ### Face buttons (A/B/X/Y)
@@ -90,15 +90,15 @@ It describes the triple profile, [`config.triple.toml`](../../config.triple.toml
 | Back | Select (bottom left) |
 | Start | Start (bottom right) |
 
-## AirTux One implementation
+## AirTuxOne implementation
 
 This mapping is applied in [`config.triple.toml`](../../config.triple.toml), using three virtual devices:
 
 | TOML section | Virtual device | Mapping |
 | :--- | :--- | :--- |
-| `[virtual_controller_1]` | **AirTux One** | Stick, H1/H2, and buttons |
-| `[virtual_controller_2]` | **AirTux One - Throttle 1** | `ABS_RZ` → `ABS_Y` (inverted) |
-| `[virtual_controller_3]` | **AirTux One - Throttle 2** | `ABS_THROTTLE` → `ABS_RY` (inverted) |
+| `[virtual_controller_1]` | **AirTuxOne** | Stick, H1/H2, and buttons |
+| `[virtual_controller_2]` | **AirTuxOne - Throttle 1** | `ABS_RZ` → `ABS_Y` (inverted) |
+| `[virtual_controller_3]` | **AirTuxOne - Throttle 2** | `ABS_THROTTLE` → `ABS_RY` (inverted) |
 
 The detailed stick mapping above applies to `[virtual_controller_1]`.
 

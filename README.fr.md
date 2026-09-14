@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="airtuxone_logo.png" alt="AirTux One" width="240">
+  <img src="airtuxone_logo.png" alt="AirTuxOne" width="240">
 </p>
 
 <p align="center">
@@ -10,9 +10,20 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3"></a>
 </p>
 
-# AirTux One
+# AirTuxOne
 
-Démon Linux qui lit un **Turtle Beach VelocityOne Flightstick** via `evdev` et émet vers une **manette Xbox 360 virtuelle** via `uinput`. Conçu pour Firefox et GeForce NOW afin de piloter Microsoft Flight Simulator avec le manche et les boutons du stick.
+AirTuxOne est un démon Linux qui transpose un joystick **Turtle Beach VelocityOne Flightstick** vers une ou plusieurs **manette(s) Xbox 360 virtuelle(s)**. Conçu pour piloter dans Microsoft Flight Simulator avec le manche, les boutons et les manettes de gaz du stick, même depuis un vieux PC sous Linux, en s'appuyant par exemple sur le service de cloud gaming Geforce Now et un navigateur Firefox.
+
+## Pourquoi AirTuxOne ?
+
+AirTuxOne a été pensé pour répondre à la difficulté suivante : comment jouer à Flight Simulator 2020 ou 2024 à partir d'un PC relativement ancien (qui ne dispose donc pas de la puissance nécessaire à faire tourner le jeu), sous un système Linux, tout en bénéficiant du confort de jeu d'un joystick ?
+La 1ère réponse a été d'utiliser un service de cloud gaming : cela permet de fournir la puissance nécessaire à un jeu comme Flight Simulator tout en streamant le rendu graphique vers un PC qui n'aura qu'à afficher le flux streamé. Avec un telle solution, il est facile de jouer à ce simulateur avec clavier + souris ou une manette standard Xbox, à la fois reconnue par le service de streaming et par le jeu. Mais il restait frustrant de ne pas pouvoir jouer avec un joystick plus adapté à un simulateur de vol !
+
+La seconde réponse a donc consisté à faire passer le joystick pour une ou plusieurs manettes Xbox virtuelles, pour pouvoir ensuite configurer l'utilisation des différents boutons, axes et manettes de gaz directement dans le jeu de simulation.
+
+Attention :
+- le navigateur Firefox et le service Geforce Now sont des solutions tierces. Le concepteur d'AirTuxOne n'est pas responsable de leur bon fonctionnement.
+- le service Geforce Now nécessite une souscription payante à souscrire séparemment.
 
 ## Installation rapide
 
@@ -41,7 +52,7 @@ Le script `setup.sh` automatise :
 
 ### Ignorer l'installation apt
 
-Si le Gestionnaire de mises à jour Mint (`aptk`) bloque apt :
+Si le Gestionnaire de mises à jour APT (`aptk`) bloque apt :
 
 ```bash
 ./setup.sh --skip-apt
@@ -75,12 +86,14 @@ sudo usermod -aG airtux-input,uinput $USER
 
 ## Configuration
 
-Le mapping de base est défini dans [`config.toml`](config.toml). **Aucun axe ou bouton n'est codé en dur dans le Python.**
+Le mapping de base permet de faire la correspondance entre le joystick, les boutons associés et une unique manette Xbox virtuelle. Dans cette configuration, les manettes de gaz associés au joystick ne peuvent pas être mappés. Le mapping de base est défini dans [`config.toml`](config.toml). **Note : aucun axe ou bouton n'est codé en dur dans le code Python.**
 
-Utilisez les profils spécialisés selon le type d'avion :
+Pour pouvoir utiliser les manettes des gaz associées au joystick, utilisez les profils spécialisés selon le type d'avion :
 
-- [`config.dual.toml`](config.dual.toml): profil recommandé pour les liners, avec une seconde manette virtuelle pour la gestion des gaz
-- [`config.triple.toml`](config.triple.toml): profil pour monomoteurs / bimoteurs / hélicos, avec une manette virtuelle distincte par levier de gaz
+- [`config.dual.toml`](config.dual.toml): profil recommandé pour un pilotage où une seule manette des gaz suffit. Ce profil crée :
+    - une manette pour mapper l'axe principal du joystick et ses principaux boutons;
+    - une seconde manette virtuelle pour la gestion des gaz.
+- [`config.triple.toml`](config.triple.toml): profil pour monomoteurs / bimoteurs / hélicos, avec une manette virtuelle distincte par manette de gaz, permettant d'utiliser 2 manettes de gaz.
 
 | Section | Rôle |
 |---------|------|
@@ -92,9 +105,9 @@ Utilisez les profils spécialisés selon le type d'avion :
 
 | Profil | Disposition des manettes |
 |---------|--------------------------|
-| Base (`config.toml`) | 1 : manche **AirTux One** |
-| Dual (`config.dual.toml`) | 1 : manche **AirTux One** ; 2 : **AirTux One - Throttle** |
-| Triple (`config.triple.toml`) | 1 : manche **AirTux One** ; 2 : **Throttle 1** ; 3 : **Throttle 2** |
+| Base (`config.toml`) | 1 : manche **AirTuxOne** |
+| Dual (`config.dual.toml`) | 1 : manche **AirTuxOne** ; 2 : **AirTuxOne - Throttle** |
+| Triple (`config.triple.toml`) | 1 : manche **AirTuxOne** ; 2 : **Throttle 1** ; 3 : **Throttle 2** |
 
 ### Vue d'ensemble du profil triple
 
@@ -166,7 +179,7 @@ Le mapping MSFS est documenté dans [`docs/fr/mapping_velocityone_xbox.md`](docs
 
 ### Mode PC obligatoire
 
-Le VelocityOne démarre en **mode Xbox** par défaut. Sous Linux, le pilote **`xpad`** expose les leviers de gaz en valeurs discrètes seulement (`0`, `1`, `32768`). **Passez en mode PC** sur l'OLED du stick (Configurator → Input Mode → PC), puis vérifiez avec `./setup.sh --check` et `evtest`.
+Le joystick VelocityOne démarre en **mode Xbox** par défaut. Sous Linux, le pilote **`xpad`** expose les leviers de gaz en valeurs discrètes seulement (`0`, `1`, `32768`). **Passez en mode PC** sur l'OLED du stick (Configurator → Input Mode → PC), puis vérifiez avec `./setup.sh --check` et `evtest`.
 
 ### Découvrir les codes evdev
 
@@ -189,66 +202,54 @@ export AIRTUX_CONFIG=/chemin/vers/config.toml
 
 ## Lancement
 
+Il est conseillé de suivre la procédure de lancement suivant, dans l'ordre :
+
+1) Ouvrir un terminal
+2) Lancement du script AirTuxOne (avec au choix profils 1 manette, 2 manettes ou 3 manettes)
+3) Lancement de votre navigateur (pour accès au service de streaming et au jeu)
+4) Lancement du service de streaming puis du jeu
+
+**Commande pour lancer le profil "1 manette virtuelle" :**
+
 ```bash
 ./airtuxone.sh
 ```
 
-**Firefox est le navigateur recommandé pour les profils multi-manettes.**
-
-Les profils multi-manettes (dual ou triple) sont conçus pour **Firefox + GeForce NOW**. Ils ne sont pas fiables sous **Chrome** pour cette configuration particulière, où les manettes virtuelles supplémentaires ne sont pas toujours exposées correctement.
-
-**Deux manettes :** 1 levier de gaz sur une seconde manette Xbox virtuelle.
+**Commande pour lancer le profil _dual_ "2 manettes virtuelles"** (1 levier de gaz sur une seconde manette Xbox virtuelle) :
 
 ```bash
 ./airtuxone-dual.sh
 ```
 
-**Trois manettes :** 2 leviers de gaz séparés sur une manette Xbox virtuelle distincte, pour que GeForce NOW / MSFS voie des périphériques distincts pour **Throttle 1** et **Throttle 2**. Cela permet d'utiliser réellement les 2 manettes de gaz analogiques du joystick.
+Attention : Firefox est le navigateur recommandé pour les profils multi-manettes.
+
+Note : les profils multi-manettes (dual ou triple) sont conçus et testés pour **Firefox + GeForce NOW**. Ils ne sont pas fiables sous **Chrome** pour cette configuration particulière, où les manettes virtuelles supplémentaires ne sont pas toujours exposées correctement. Les profils n'ont pas été testés avec d'autres navigateurs, d'autres services de streaming, ou d'autres jeux.
+
+
+
+**Commande pour lancer le profil _triple_ 3 manettes (2 leviers de gaz séparés sur une manette Xbox virtuelle distincte) :**
 
 ```bash
 ./airtuxone-triple.sh
 ```
 
-Manettes attendues : **AirTux One** (manche), **AirTux One - Throttle 1** (premier levier) et **AirTux One - Throttle 2** (second levier). Config : [`config.triple.toml`](config.triple.toml).
+**Note importante :** l'utilisation du profil _triple_ est nécessaire pour que GeForce NOW et MSFS voient des périphériques distincts pour **Throttle 1** et **Throttle 2**. Cela permet d'utiliser réellement les 2 manettes de gaz analogiques du joystick.
 
-Dans MSFS : filtrer sur le nom exact du périphérique avant d’assigner (sinon « mauvais périphérique »). Assigner **Throttle 1** sur la première manette et **Throttle 2** sur la seconde, puis laisser le manche principal pour roulis / tangage / regard. Conserver chaque gaz sur un axe de stick, pas sur des gâchettes analogiques, pour rester compatible avec le comportement stable du profil dual.
+## Arrêt du démon
 
-Ou manuellement :
+Arrêt propre : `Ctrl+C` ou `kill -TERM <pid>` dans le terminal où tourne le démon.
 
-```bash
-source .venv/bin/activate
-python -m airtux_one.core
-```
+## Utilisation des manettes virtuelles dans MSFS
 
-Arrêt propre : `Ctrl+C` ou `kill -TERM <pid>`.
+Dans MSFS, agir sur les différents axes ou boutons permettra au jeu de détecter les différentes manettes virtuelles (par exemple, "Manette 1", "Manette 2", "Manette 3" si vous utilisez le profil _triple_).
 
-**Ordre GeForce NOW :** lancez le démon **avant** d'ouvrir Firefox / GeForce NOW.
-
-## Service systemd (utilisateur)
-
-Créez `~/.config/systemd/user/airtux-one.service` :
-
-```ini
-[Unit]
-Description=AirTux One flight stick mapper
-After=graphical-session.target
-
-[Service]
-ExecStart=/chemin/vers/airtuxone/.venv/bin/python -m airtux_one.core
-WorkingDirectory=/chemin/vers/airtuxone
-Restart=on-failure
-Environment=AIRTUX_CONFIG=/chemin/vers/airtuxone/config.toml
-
-[Install]
-WantedBy=default.target
-```
 
 ## Vérification
 
 ### Manette virtuelle (evtest / jstest)
 
 ```bash
-evtest    # choisir « AirTux One »
+evtest    # choisir « AirTuxOne »
 jstest /dev/input/jsN
 ```
 
@@ -256,37 +257,26 @@ jstest /dev/input/jsN
 
 1. Démon lancé en premier
 2. **Firefox**
-3. Sélectionner **AirTux One** (`vendor 045e`, `product 02a1`) dans le testeur ou MSFS
+3. Sélectionner **AirTuxOne** (`vendor 045e`, `product 02a1`) dans le testeur (par exemple : https://hardwaretester.com/gamepad) ou MSFS
 
 ## Dépannage
 
 | Problème | Solution |
 |----------|----------|
-| `Device or resource busy` au démarrage | Fermer jstest/evtest et les onglets Chrome (gamepad-tester, GFN) ; relancer `./airtuxone.sh` |
+| `Device or resource busy` au démarrage | Fermer jstest/evtest et les onglets Firefox ; relancer `./airtuxone.sh` ou ses variantes dual et triple |
 | `Permission denied` sur `/dev/input/*` | `./setup.sh` ou `sudo usermod -aG airtux-input $USER` + reconnexion |
 | `Permission denied` sur `/dev/uinput` | `./setup.sh` + reconnexion |
 | Device source introuvable | Brancher le VelocityOne ; `./setup.sh --check` ; mode **PC** sur le stick |
 | Gaz sans précision (evtest : 0, 1, 32768) | Mode Xbox actif — passer en **mode PC** |
-| Mauvaise manette dans le navigateur | Choisir **AirTux One** (`045e:02a1`) |
+| Mauvaise manette dans le navigateur | Choisir **AirTuxOne** (`045e:02a1`) |
 | Codes d'axes incorrects | `python -m airtux_one.discover` puis mettre à jour `config.toml` |
 
 ## Sécurité
 
 - Ne **pas** lancer le démon en root.
 - Utiliser uniquement les groupes dédiés `airtux-input` et `uinput` installés par `./setup.sh`.
-- `airtux-input` est limité au VelocityOne ; ne pas ajouter d'utilisateur au groupe global `input` pour AirTux One. Un membre existant peut le quitter avec `sudo gpasswd -d $USER input` seulement après avoir vérifié qu'aucun autre logiciel ne l'utilise.
+- `airtux-input` est limité au VelocityOne ; ne pas ajouter d'utilisateur au groupe global `input` pour AirTuxOne. Un membre existant peut le quitter avec `sudo gpasswd -d $USER input` seulement après avoir vérifié qu'aucun autre logiciel ne l'utilise.
 - Le grab exclusif (`grab_source`) bloque les autres lecteurs du stick physique.
-
-## Maintenance des dépendances
-
-Avant une publication, créez un environnement virtuel propre et lancez :
-
-```bash
-pip install --upgrade -r requirements.txt
-pip check
-pip index versions evdev
-pip-audit -r requirements.txt
-```
 
 ## Arborescence
 
@@ -317,6 +307,36 @@ airtuxone/
     ├── discover.py
     ├── learn.py
     └── mapper.py
+```
+
+## Utilisateur avancé
+
+Cette configuration est optionnelle et vise à permettre le démarrage automatique du script AirTuxOne au lancement d'une session. Elle ne sélectionne pas un profil à elle seule : il faut pointer vers la configuration correspondant au profil choisi (`config.toml`, `config.dual.toml` ou `config.triple.toml`).
+
+### Démarrage automatique avec systemd
+
+Créez `~/.config/systemd/user/airtux-one.service` :
+
+```ini
+[Unit]
+Description=AirTuxOne flight stick mapper
+After=graphical-session.target
+
+[Service]
+ExecStart=/chemin/vers/airtuxone/.venv/bin/python -m airtux_one.core
+WorkingDirectory=/chemin/vers/airtuxone
+Restart=on-failure
+Environment=AIRTUX_CONFIG=/chemin/vers/airtuxone/config.toml
+
+[Install]
+WantedBy=default.target
+```
+
+Pour un profil dual ou triple, remplacez `config.toml` par `config.dual.toml` ou `config.triple.toml` dans la variable `Environment`, puis activez le service avec :
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now airtux-one.service
 ```
 
 ## Licence

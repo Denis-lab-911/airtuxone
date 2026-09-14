@@ -21,8 +21,8 @@ Il décrit le profil triple, [`config.triple.toml`](../../config.triple.toml). L
 
 | Élément physique (VelocityOne) | Code evdev source | Manette virtuelle | Cible Xbox | Fonction MSFS recommandée |
 | :--- | :--- | :--- | :--- | :--- |
-| Levier gaz 1 | `ABS_RZ` | **Manette 2** — AirTux One - Throttle 1 | `ABS_Y` (stick gauche vertical, inversé) | **Poussée 1** |
-| Levier gaz 2 | `ABS_THROTTLE` | **Manette 3** — AirTux One - Throttle 2 | `ABS_RY` (stick droit vertical, inversé) | **Poussée 2** |
+| Levier gaz 1 | `ABS_RZ` | **Manette 2** — AirTuxOne - Throttle 1 | `ABS_Y` (stick gauche vertical, inversé) | **Poussée 1** |
+| Levier gaz 2 | `ABS_THROTTLE` | **Manette 3** — AirTuxOne - Throttle 2 | `ABS_RY` (stick droit vertical, inversé) | **Poussée 2** |
 | Molette trim | `ABS_RUDDER` | Aucune | Non mappée | À configurer séparément |
 
 ### Boutons face (A/B/X/Y)
@@ -90,15 +90,15 @@ Correspondance **1:1** — le démon maintient **LB** + le bouton face tant que 
 | Back | Select (bas gauche) |
 | Start | Start (bas droit) |
 
-## Implémentation AirTux One
+## Implémentation AirTuxOne
 
 Ce mapping est appliqué dans [`config.triple.toml`](../../config.triple.toml), avec trois périphériques virtuels :
 
 | Section TOML | Périphérique virtuel | Mapping |
 | :--- | :--- | :--- |
-| `[virtual_controller_1]` | **AirTux One** | Manche, H1/H2 et boutons |
-| `[virtual_controller_2]` | **AirTux One - Throttle 1** | `ABS_RZ` → `ABS_Y` (inversé) |
-| `[virtual_controller_3]` | **AirTux One - Throttle 2** | `ABS_THROTTLE` → `ABS_RY` (inversé) |
+| `[virtual_controller_1]` | **AirTuxOne** | Manche, H1/H2 et boutons |
+| `[virtual_controller_2]` | **AirTuxOne - Throttle 1** | `ABS_RZ` → `ABS_Y` (inversé) |
+| `[virtual_controller_3]` | **AirTuxOne - Throttle 2** | `ABS_THROTTLE` → `ABS_RY` (inversé) |
 
 Le mapping détaillé du manche ci-dessus concerne la section `[virtual_controller_1]`.
 

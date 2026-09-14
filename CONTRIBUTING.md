@@ -1,6 +1,6 @@
-# Contributing to AirTux One
+# Contributing to AirTuxOne
 
-Thank you for your interest in AirTux One.
+Thank you for your interest in AirTuxOne.
 
 ## Reporting issues
 
