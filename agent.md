@@ -2,7 +2,7 @@
 
 ## [Objectif Général]
 
-Développer un démon Linux (AirTuxOne) qui intercepte les entrées d'un TurtleBeach VelocityOne Flightstick via `evdev` et les traduit vers une **manette Xbox 360 virtuelle** via `uinput`. Objectif : permettre à Google Chrome et GeForce NOW de piloter Microsoft Flight Simulator avec le manche, les gaz et les boutons du stick.
+Développer un démon Linux (AirTuxOne) qui intercepte les entrées d'un TurtleBeach VelocityOne Flightstick via `evdev` et les traduit vers une **manette Xbox 360 virtuelle** via `uinput`. Objectif : pouvoir jouer à Microsoft Flight Simulator avec le joystick quasi complet (avec le manche, les gaz et les boutons du stick), depuis un vieux PC sous Linux, en s'appuyant sur le navigateur Firefox et un service de cloud gaming (ici Geforce Now).
 
 ## [Architecture Validée]
 
