@@ -239,6 +239,30 @@ Note : les profils multi-manettes (dual ou triple) sont conçus et testés pour 
 
 Arrêt propre : `Ctrl+C` ou `kill -TERM <pid>` dans le terminal où tourne le démon.
 
+## Création d'un raccourci sur le bureau
+
+Les scripts de raccourci créent une icône sur le bureau ainsi qu'une entrée dans le menu des applications. Exécutez, depuis le répertoire du projet, le script correspondant au profil souhaité :
+
+**Une manette virtuelle :**
+
+```bash
+./install-desktop.sh
+```
+
+**Deux manettes virtuelles (dual) :**
+
+```bash
+./install-desktop-dual.sh
+```
+
+**Trois manettes virtuelles (triple) :**
+
+```bash
+./install-desktop-triple.sh
+```
+
+Double-cliquez sur le nouveau raccourci pour lancer le démon dans un terminal. Pour l'arrêter, appuyez sur `Ctrl+C` dans ce terminal.
+
 ## Utilisation des manettes virtuelles dans MSFS
 
 Dans MSFS, agir sur les différents axes ou boutons permettra au jeu de détecter les différentes manettes virtuelles (par exemple, "Manette 1", "Manette 2", "Manette 3" si vous utilisez le profil _triple_).
