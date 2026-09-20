@@ -143,6 +143,7 @@ SOURCE: JOYSTICK PHYSICAL LAYOUT                 TARGET VIRTUAL XBOX CONTROLLERS
 ┌───────────────────────────────────────┐
 │ [H1 Hat] POV hat                      │───────► Controller 1: D-pad
 │ [H2 Stick] Analog mini-stick          │───────► Controller 1: Right stick (look / camera)
+│ [Trim wheel] Rudder axis              │───────► Controller 2: D-pad up/down
 │                                       │
 │ [B1] Main trigger                     │───────► Controller 1: A button
 │ [B2] Left thumb button                │───────► Controller 1: B button
@@ -155,6 +156,8 @@ SOURCE: JOYSTICK PHYSICAL LAYOUT                 TARGET VIRTUAL XBOX CONTROLLERS
 │ [B8] Lower side button                │───────► Controller 1: Combo [LB + Y]
 │ [Secondary trigger]                   │───────► Controller 1: RB button
 └───────────────────────────────────────┘
+
+In the dual and triple profiles, the trim wheel (`ABS_RUDDER`) is mapped to the D-pad of Controller 2 (Throttle 1): decreasing values produce D-pad up and increasing values produce D-pad down. The mapping uses `threshold = 128`, which corresponds to approximately two hardware steps with the current VelocityOne input resolution. Each D-pad press is held briefly and released without blocking the other controls, including the H2 mini-stick.
 
 --- BODY & BASE (AXES & BUTTONS) ---
 ┌───────────────────────────────────────┐
@@ -265,6 +268,8 @@ Double-click the new shortcut to start the daemon in a terminal. Stop it with `C
 ## Using virtual controllers in MSFS
 
 In MSFS, moving the different axes or buttons allows the game to detect the different virtual controllers (for example, "Controller 1", "Controller 2", and "Controller 3" when using the _triple_ profile).
+
+For trim, assign the D-pad up and D-pad down buttons from **AirTux One - Throttle 1** to the corresponding trim commands. The throttle axes remain independent and must not be included in the trim assignments. If MSFS does not react reliably, remove and recreate the trim assignments while the daemon is running, then save the control profile.
 
 ## Verification
 

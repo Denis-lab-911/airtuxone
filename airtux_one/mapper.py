@@ -32,7 +32,7 @@ class MappingRule:
     # "centered_trigger" : axe centré → une gâchette 0–255, neutre à 128 (+/- sur un seul axe)
     mode: str = "passthrough"
     secondary_target_code: int | None = None
-    # trim_impulse : impulsion RB + D-Pad par cran de molette
+    # trim_impulse : impulsion D-Pad par cran de molette
     impulse_modifier_code: int | None = None
     impulse_hat_up: int = -1
     impulse_hat_down: int = 1
@@ -258,7 +258,7 @@ class EventMapper:
 
             for source_name, entry in axes.items():
                 if isinstance(entry, dict) and entry.get("mode") == "trim_impulse":
-                    modifier = entry.get("modifier_button", "BTN_TR")
+                    modifier = entry.get("modifier_button")
                     hat = entry.get("hat", "ABS_HAT0Y")
                     source_code = _resolve_ecode(source_name, "axis")
                     key = (ecodes.EV_ABS, source_code)
@@ -274,7 +274,11 @@ class EventMapper:
                         invert=bool(entry.get("invert", False)),
                         deadzone=0,
                         mode="trim_impulse",
-                        impulse_modifier_code=_resolve_ecode(modifier, "button"),
+                        impulse_modifier_code=(
+                            _resolve_ecode(modifier, "button")
+                            if modifier is not None
+                            else None
+                        ),
                         impulse_hat_up=int(entry.get("hat_up", -1)),
                         impulse_hat_down=int(entry.get("hat_down", 1)),
                         impulse_threshold=int(entry.get("threshold", 256)),

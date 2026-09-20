@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import time
 from typing import Any
 
 from evdev import AbsInfo, InputDevice, UInput, ecodes, list_devices
@@ -118,18 +117,21 @@ class VirtualController:
     def emit_key(self, code: int, value: int) -> None:
         self._device.write(ecodes.EV_KEY, code, value)
 
-    def emit_trim_combo(self, modifier: int, hat_y: int, frames: int = 12) -> None:
-        """RB + D-Pad (hat + boutons) — impulsion courte pour MSFS."""
+    def emit_trim_button(self, button: int, pressed: bool) -> None:
+        """Emit one D-Pad button state and synchronize it immediately."""
+        self.emit_key(button, 1 if pressed else 0)
+        self.syn()
+
+    def emit_trim_combo(self, modifier: int | None, hat_y: int, frames: int = 1) -> None:
+        """Emit one short D-Pad pulse without blocking the event loop."""
         dpad_btn = ecodes.BTN_DPAD_UP if hat_y < 0 else ecodes.BTN_DPAD_DOWN if hat_y > 0 else 0
-        for _ in range(frames):
+        if modifier is not None:
             self.emit_key(modifier, 1)
-            self.emit_abs(ecodes.ABS_HAT0Y, hat_y)
-            if dpad_btn:
-                self.emit_key(dpad_btn, 1)
-            self.syn()
-            time.sleep(0.02)
-        self.emit_key(modifier, 0)
-        self.emit_abs(ecodes.ABS_HAT0Y, 0)
+        if dpad_btn:
+            self.emit_key(dpad_btn, 1)
+        self.syn()
+        if modifier is not None:
+            self.emit_key(modifier, 0)
         for btn in (
             ecodes.BTN_DPAD_UP,
             ecodes.BTN_DPAD_DOWN,

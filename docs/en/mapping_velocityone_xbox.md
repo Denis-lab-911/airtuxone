@@ -112,7 +112,7 @@ The detailed stick mapping above applies to `[virtual_controller_1]`.
 | `linear_positive` | Full source range mapped to a positive stick axis |
 | `linear_trigger` | Full source range mapped to a 0–255 trigger |
 | `centered_trigger` | Centered source axis mapped to one 0–255 trigger, neutral at 128 |
-| `trim_impulse` | Axis movement emits a configured modifier + D-Pad impulse |
+| `trim_impulse` | Axis movement emits a D-Pad impulse, with an optional modifier |
 | `trim_pulse` | Button press emits a configured modifier + D-Pad pulse |
 | `dpad_hold` | Button hold emits a configured D-Pad direction, optionally with a modifier |
 
@@ -120,4 +120,4 @@ The detailed stick mapping above applies to `[virtual_controller_1]`.
 
 Axis entries accept `target`, `mode`, `invert`, and `deadzone`. `linear`, `linear_positive`, and `linear_trigger` can optionally use `input_min`/`input_max` (or `range_min`/`range_max`) to calibrate the source range. `split_triggers` requires `target_left` and `target_right` rather than `target`.
 
-Button entries normally contain a target code string. `modifier_hold` requires `modifier_button` and `target_button`; `trim_pulse` and `dpad_hold` accept `modifier_button`, `hat`, and `hat_value`. `trim_impulse` accepts `modifier_button`, `hat`, `hat_up`, `hat_down`, and `threshold`.
+Button entries normally contain a target code string. `modifier_hold` requires `modifier_button` and `target_button`; `trim_pulse` and `dpad_hold` accept `modifier_button`, `hat`, and `hat_value`. `trim_impulse` accepts the optional `modifier_button`, plus `hat`, `hat_up`, `hat_down`, and `threshold`.
