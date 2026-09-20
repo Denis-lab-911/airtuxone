@@ -142,6 +142,7 @@ SOURCE : JOYSTICK PHYSICAL LAYOUT               MANETTES VIRTUELLES XBOX CIBLES
 ┌───────────────────────────────────────┐
 │ [H1 Hat] Chapeau chinois              │───────► Manette 1 : Croix directionnelle (D-Pad)
 │ [H2 Stick] Mini-stick analogique      │───────► Manette 1 : Stick Droit (Look / Caméra)
+│ [Molette trim] Axe Rudder             │───────► Manette 2 : D-Pad haut/bas
 │                                       │
 │ [B1] Gâchette principale              │───────► Manette 1 : Bouton A
 │ [B2] Bouton pouce gauche              │───────► Manette 1 : Bouton B
@@ -154,6 +155,8 @@ SOURCE : JOYSTICK PHYSICAL LAYOUT               MANETTES VIRTUELLES XBOX CIBLES
 │ [B8] Bouton latéral bas               │───────► Manette 1 : Combo [LB + Y]
 │ [Gâchette sec.]                       │───────► Manette 1 : Bouton RB
 └───────────────────────────────────────┘
+
+Dans les profils dual et triple, la molette de trim (`ABS_RUDDER`) est mappée sur le D-Pad de la manette 2 (Throttle 1) : les valeurs décroissantes produisent D-Pad haut et les valeurs croissantes D-Pad bas. Le mapping utilise `threshold = 128`, soit environ deux pas matériels avec la résolution actuelle du VelocityOne. Chaque pression D-Pad est maintenue brièvement puis relâchée sans bloquer les autres commandes, notamment le mini-stick H2.
 
 --- CORPS & BASE (AXES & BOUTONS) ---
 ┌───────────────────────────────────────┐
@@ -266,6 +269,8 @@ Double-cliquez sur le nouveau raccourci pour lancer le démon dans un terminal. 
 ## Utilisation des manettes virtuelles dans MSFS
 
 Dans MSFS, agir sur les différents axes ou boutons permettra au jeu de détecter les différentes manettes virtuelles (par exemple, "Manette 1", "Manette 2", "Manette 3" si vous utilisez le profil _triple_).
+
+Pour le trim, affectez les boutons D-Pad haut et D-Pad bas de **AirTux One - Throttle 1** aux commandes de trim correspondantes. Les axes des gaz restent indépendants et ne doivent pas être inclus dans les affectations du trim. Si MSFS ne réagit pas correctement, supprimez puis recréez les affectations du trim avec le démon lancé, puis enregistrez le profil de commandes.
 
 
 ## Vérification

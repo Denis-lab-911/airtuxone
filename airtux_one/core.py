@@ -6,6 +6,7 @@ import logging
 import select
 import signal
 import sys
+import time
 
 from evdev import InputEvent, ecodes
 
@@ -14,10 +15,9 @@ from airtux_one.mapper import ConfigError, EventMapper, MappingRule
 
 logger = logging.getLogger(__name__)
 
-# Impulsions trim : trames + délai (ms) par trame pour gamepad-tester / MSFS
-_TRIM_PULSE_FRAMES = 12
-_TRIM_PULSE_DELAY_S = 0.02
 _POLL_TIMEOUT = 0.5
+# MSFS may miss a very short gamepad pulse during the flight loop.
+_TRIM_PRESS_DURATION_S = 0.15
 
 
 class AirTuxDaemon:
@@ -28,6 +28,8 @@ class AirTuxDaemon:
         self._running = False
         self._device_manager: DeviceManager | None = None
         self._trim_last: dict[int, int] = {}
+        self._trim_pending: dict[int, int] = {}
+        self._trim_pressed: dict[int, tuple[VirtualController, int, float]] = {}
 
     def _setup_logging(self) -> None:
         level = getattr(
@@ -97,7 +99,9 @@ class AirTuxDaemon:
             raise RuntimeError("Source device is not initialized")
 
         while self._running:
-            ready, _, _ = select.select([source.fd], [], [], _POLL_TIMEOUT)
+            self._release_expired_trim_buttons()
+            timeout = self._next_trim_timeout()
+            ready, _, _ = select.select([source.fd], [], [], timeout)
             if not self._running:
                 break
             if not ready:
@@ -107,6 +111,21 @@ class AirTuxDaemon:
                 if rule is None:
                     continue
                 self._emit_mapped_event(rule, event)
+
+    def _next_trim_timeout(self) -> float:
+        """Wake the event loop when a pending trim button must be released."""
+        if not self._trim_pressed:
+            return _POLL_TIMEOUT
+        remaining = min(deadline for _, _, deadline in self._trim_pressed.values()) - time.monotonic()
+        return max(0.0, min(_POLL_TIMEOUT, remaining))
+
+    def _release_expired_trim_buttons(self) -> None:
+        """Release trim buttons without sleeping in the input event loop."""
+        now = time.monotonic()
+        for controller_index, (controller, button, deadline) in list(self._trim_pressed.items()):
+            if deadline <= now:
+                controller.emit_trim_button(button, False)
+                del self._trim_pressed[controller_index]
 
     def _emit_mapped_event(self, rule: MappingRule, event: InputEvent) -> None:
         if self._device_manager is None:
@@ -141,7 +160,6 @@ class AirTuxDaemon:
                     controller.emit_trim_combo(
                         rule.impulse_modifier_code,
                         hat_val,
-                        frames=_TRIM_PULSE_FRAMES,
                     )
                 return
             if rule.mode == "dpad_hold":
@@ -171,35 +189,48 @@ class AirTuxDaemon:
         source_code: int,
         controller: VirtualController,
     ) -> None:
-        """Molette trim : impulsion RB + D-Pad Haut/Bas par cran (~280 unités)."""
-        if rule.impulse_modifier_code is None:
-            raise RuntimeError("Trim impulse mapping is missing its modifier button")
+        """Molette trim : impulsion D-Pad Haut/Bas par cran (~280 unités)."""
         last = self._trim_last.get(source_code)
         if last is None:
             self._trim_last[source_code] = value
+            self._trim_pending[source_code] = 0
             return
 
         delta = value - last
         self._trim_last[source_code] = value
         if rule.invert:
             delta = -delta
-        if abs(delta) < rule.impulse_threshold:
+        pending = self._trim_pending.get(source_code, 0) + delta
+        threshold = max(rule.impulse_threshold, 1)
+        steps = int(pending / threshold)
+        self._trim_pending[source_code] = pending - steps * threshold
+        if steps == 0:
             return
 
         # Trim vers le haut = valeurs qui diminuent (ex. 14969 → 12988)
         hat_val = rule.impulse_hat_up if delta < 0 else rule.impulse_hat_down
-        logger.info(
-            "Trim impulse: %d → %d (delta=%d) → hat_y=%d + RB",
-            last,
-            value,
-            delta,
-            hat_val,
-        )
-        controller.emit_trim_combo(
-            rule.impulse_modifier_code,
-            hat_val,
-            frames=_TRIM_PULSE_FRAMES,
-        )
+        for _ in range(abs(steps)):
+            logger.info(
+                "Trim impulse: %d → %d (delta=%d, accumulated=%d) → hat_y=%d",
+                last,
+                value,
+                delta,
+                pending,
+                hat_val,
+            )
+            dpad_button = (
+                ecodes.BTN_DPAD_UP if hat_val < 0 else ecodes.BTN_DPAD_DOWN
+            )
+            controller_index = rule.controller_index
+            previous = self._trim_pressed.pop(controller_index, None)
+            if previous is not None:
+                previous[0].emit_trim_button(previous[1], False)
+            controller.emit_trim_button(dpad_button, True)
+            self._trim_pressed[controller_index] = (
+                controller,
+                dpad_button,
+                time.monotonic() + _TRIM_PRESS_DURATION_S,
+            )
 
 
 def main() -> int:
