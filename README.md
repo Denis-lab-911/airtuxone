@@ -238,6 +238,30 @@ Note: the multi-controller profiles (dual or triple) are designed and tested for
 
 Clean shutdown: `Ctrl+C` or `kill -TERM <pid>` in the terminal where the daemon is running.
 
+## Creating a desktop shortcut
+
+The desktop shortcut scripts create an icon on the desktop and an entry in the applications menu. Run the script matching the profile you want from the project directory:
+
+**One virtual controller:**
+
+```bash
+./install-desktop.sh
+```
+
+**Two virtual controllers (dual):**
+
+```bash
+./install-desktop-dual.sh
+```
+
+**Three virtual controllers (triple):**
+
+```bash
+./install-desktop-triple.sh
+```
+
+Double-click the new shortcut to start the daemon in a terminal. Stop it with `Ctrl+C` in that terminal.
+
 ## Using virtual controllers in MSFS
 
 In MSFS, moving the different axes or buttons allows the game to detect the different virtual controllers (for example, "Controller 1", "Controller 2", and "Controller 3" when using the _triple_ profile).
