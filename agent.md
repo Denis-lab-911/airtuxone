@@ -71,3 +71,14 @@ airtuxone/
 | 2026-09-05 | Documentation EN/FR synchronisée pour profils base/dual/triple, sécurité et maintenance des dépendances |
 | 2026-09-05 | Profil base simplifié : suppression de la manette leurre, manche AirTuxOne en `virtual_controller_1` |
 | 2026-09-05 | Profil dual réordonné : manche AirTuxOne en première manette, gaz en seconde manette |
+| 2026-09-21 | Remap BTN_DEAD / BTN_TRIGGER_HAPPY1 vers manette 2
+
+- Suppression du mapping `BTN_DEAD → BTN_TL` (LB) sur `virtual_controller_1` dans `config.dual.toml` et `config.triple.toml` (conflit : un bouton source ne peut cibler qu'une seule sortie dans la table de lookup globale).
+- Ajout dans `[virtual_controller_2.mapping.buttons]` :
+  - `BTN_DEAD → BTN_SOUTH` (A)
+  - `BTN_TRIGGER_HAPPY1 → BTN_EAST` (B)
+|2026-09-21| Fix perte intermittente de la molette de trim en vol
+- Cause : `ABS_RUDDER` est un axe borné (min/max) ; un repli (wraparound) en fin de course produit un delta artificiellement énorme, interprété comme des dizaines de pas de trim d'un coup → rafale de D-Pad incohérente perçue comme une "perte" temporaire de la molette.
+- Correctif dans `_emit_trim_impulse` (`airtux_one/core.py`) : récupération de l'`AbsInfo` source et rejet des deltas dont l'amplitude dépasse la moitié de la plage de l'axe (`absinfo.max - absinfo.min`), traités comme un artefact de repli plutôt qu'un mouvement réel.
+- Aucun changement de config nécessaire (`config.dual.toml`, `config.triple.toml` déjà en `mode = "trim_impulse"`, `threshold = 64`).
+- Validation manuelle à faire via `evtest` : tourner la molette en continu dans un sens jusqu'à la fin de course et vérifier l'absence de rafale de D-Pad dans les logs (`Trim impulse: ignoring wraparound delta ...` en DEBUG).

@@ -8,7 +8,7 @@ import signal
 import sys
 import time
 
-from evdev import InputEvent, ecodes
+from evdev import AbsInfo, InputEvent, ecodes
 
 from airtux_one.devices import DeviceManager, DeviceNotFoundError, VirtualController
 from airtux_one.mapper import ConfigError, EventMapper, MappingRule
@@ -138,7 +138,8 @@ class AirTuxDaemon:
         event_code = event.code
         if rule.target_type == ecodes.EV_ABS:
             if rule.mode == "trim_impulse":
-                self._emit_trim_impulse(rule, value, event_code, controller)
+                absinfo = self._device_manager.get_absinfo(event_code)
+                self._emit_trim_impulse(rule, value, event_code, controller, absinfo)
                 return
             absinfo = self._device_manager.get_absinfo(event_code)
             if rule.mode == "split_triggers" and rule.secondary_target_code is not None:
@@ -188,6 +189,7 @@ class AirTuxDaemon:
         value: int,
         source_code: int,
         controller: VirtualController,
+        absinfo: AbsInfo | None = None,
     ) -> None:
         """Molette trim : impulsion D-Pad Haut/Bas par cran (~280 unités)."""
         last = self._trim_last.get(source_code)
@@ -197,6 +199,17 @@ class AirTuxDaemon:
             return
 
         delta = value - last
+        # The wheel axis is bounded (min..max): a report crossing that boundary
+        # produces a huge fake delta which used to fire a burst of spurious
+        # D-Pad pulses and made the trim feel "lost" for a moment. Drop it.
+        if absinfo is not None:
+            axis_range = absinfo.max - absinfo.min
+            if axis_range > 0 and abs(delta) > axis_range // 2:
+                self._trim_last[source_code] = value
+                logger.debug(
+                    "Trim impulse: ignoring wraparound delta %d → %d", last, value
+                )
+                return
         self._trim_last[source_code] = value
         if rule.invert:
             delta = -delta
