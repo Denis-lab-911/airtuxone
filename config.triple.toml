@@ -48,7 +48,6 @@ BTN_TRIGGER_HAPPY5  = "BTN_SELECT"   # bottom left → Back
 BTN_TRIGGER_HAPPY6  = "BTN_THUMBL"   # bottom center — free
 BTN_TRIGGER_HAPPY7  = "BTN_START"    # bottom right → Start
 BTN_TRIGGER_HAPPY4  = "BTN_MODE"     # Xbox button → Guide
-BTN_DEAD            = "BTN_TL"       # B16 → LB
 
 # 2) Throttle 1 pad — first lever of the joystick
 [virtual_controller_2]
@@ -61,9 +60,11 @@ product_id = 0x02A0
 # This matches the working dual profile and avoids the MSFS / browser idle drift.
 ABS_RZ = { target = "ABS_Y", invert = true, deadzone = 0, mode = "linear" }
 # Trim wheel: decreasing values → D-Pad up, increasing values → D-Pad down.
-ABS_RUDDER = { mode = "trim_impulse", hat = "ABS_HAT0Y", hat_up = -1, hat_down = 1, threshold = 128 }
+ABS_RUDDER = { mode = "trim_impulse", hat = "ABS_HAT0Y", hat_up = -1, hat_down = 1, threshold = 64 }
 
 [virtual_controller_2.mapping.buttons]
+BTN_DEAD            = "BTN_SOUTH"    # B16 → A (manette 2)
+BTN_TRIGGER_HAPPY1  = "BTN_EAST"     # → B (manette 2)
 
 # 3) Throttle 2 pad — second lever of the joystick
 [virtual_controller_3]
