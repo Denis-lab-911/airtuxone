@@ -173,8 +173,8 @@ Dans les profils dual et triple, la molette de trim (`ABS_RUDDER`) est mappée s
 
 --- BLOC MANETTES DE GAZ (THROTTLE QUADRANT) ---
 ┌───────────────────────────────────────┐
-│ Levier 1 (Axe RZ)                     │───────► Manette 2 : Stick Gauche Y (Throttle 1)
-│ Levier 2 (Axe Throttle)               │───────► Manette 3 : Stick Droit Y (Throttle 2)
+│ Levier 1 (Axe RZ)                     │───────► Manette 2 : Stick gauche Y (Throttle 1)
+│ Levier 2 (Axe Throttle)               │───────► Manette 3 : Stick droit Y (Throttle 2)
 └───────────────────────────────────────┘
 ```
 
