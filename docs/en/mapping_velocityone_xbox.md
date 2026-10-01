@@ -21,8 +21,8 @@ It describes the triple profile, [`config.triple.toml`](../../config.triple.toml
 
 | Physical control (VelocityOne) | Source evdev code | Virtual controller | Xbox target | Suggested MSFS function |
 | :--- | :--- | :--- | :--- | :--- |
-| Throttle lever 1 | `ABS_RZ` | **Controller 2** — AirTuxOne - Throttle 1 | `ABS_Y` (left stick vertical, inverted) | **Throttle 1** |
-| Throttle lever 2 | `ABS_THROTTLE` | **Controller 3** — AirTuxOne - Throttle 2 | `ABS_RY` (right stick vertical, inverted) | **Throttle 2** |
+| Throttle lever 1 | `ABS_RZ` | **Controller 2** — AirTuxOne - Throttle 1 | `ABS_Y` (left stick vertical) | **Throttle 1** |
+| Throttle lever 2 | `ABS_THROTTLE` | **Controller 3** — AirTuxOne - Throttle 2 | `ABS_RY` (right stick vertical) | **Throttle 2** |
 | Trim wheel | `ABS_RUDDER` | None | Unmapped | Configure separately |
 
 ### Face buttons (A/B/X/Y)
@@ -68,7 +68,7 @@ It describes the triple profile, [`config.triple.toml`](../../config.triple.toml
 ## Configuration notes
 
 1. **H2 → right stick:** head mini-stick = horizontal + vertical look in MSFS (RS X / RS Y).
-2. **Throttle:** in the triple profile, `ABS_RZ` is sent to the left stick vertical axis of controller 2 and `ABS_THROTTLE` to the right stick vertical axis of controller 3. Both axes are inverted (`invert = true`) and use `linear` mode.
+2. **Throttle:** in the triple profile, `ABS_RZ` is sent to the left stick's vertical axis (`ABS_Y`) on controller 2 and `ABS_THROTTLE` to the right stick's vertical axis (`ABS_RY`) on controller 3. `linear` maps each lever's full travel to the bipolar stick range (-32768 to 32767). With `invert = false`, the minimum source value maps to the stick minimum and the maximum source value to its maximum.
 3. **Twist / rudder:** `split_triggers` mode (analog LT/RT only). Adjust `deadzone` in `config.toml` if the rudder drifts.
 4. **Sensitivity curves:** reduce responsiveness by **-20% to -35%** on roll and pitch.
 
@@ -97,8 +97,8 @@ This mapping is applied in [`config.triple.toml`](../../config.triple.toml), usi
 | TOML section | Virtual device | Mapping |
 | :--- | :--- | :--- |
 | `[virtual_controller_1]` | **AirTuxOne** | Stick, H1/H2, and buttons |
-| `[virtual_controller_2]` | **AirTuxOne - Throttle 1** | `ABS_RZ` → `ABS_Y` (inverted) |
-| `[virtual_controller_3]` | **AirTuxOne - Throttle 2** | `ABS_THROTTLE` → `ABS_RY` (inverted) |
+| `[virtual_controller_2]` | **AirTuxOne - Throttle 1** | `ABS_RZ` → `ABS_Y` (left stick vertical) |
+| `[virtual_controller_3]` | **AirTuxOne - Throttle 2** | `ABS_THROTTLE` → `ABS_RY` (right stick vertical) |
 
 The detailed stick mapping above applies to `[virtual_controller_1]`.
 
@@ -108,9 +108,9 @@ The detailed stick mapping above applies to `[virtual_controller_1]`.
 | `split_triggers` | Twist → LT/RT |
 | `modifier_hold` | B5–B8 → LB + face button held |
 | `passthrough` | POV H1 / D-Pad |
-| `linear` | Full source range mapped to a bipolar Xbox stick axis; used for both throttle levers |
-| `linear_positive` | Full source range mapped to a positive stick axis |
-| `linear_trigger` | Full source range mapped to a 0–255 trigger |
+| `linear` | Full source range mapped to a bipolar Xbox stick axis (-32768 to 32767); used for both throttle levers |
+| `linear_positive` | Full source range mapped to one half of a stick axis (0 to 32767) |
+| `linear_trigger` | Full source range mapped to a unipolar 0–255 trigger |
 | `centered_trigger` | Centered source axis mapped to one 0–255 trigger, neutral at 128 |
 | `trim_impulse` | Axis movement emits a D-Pad impulse, with an optional modifier |
 | `trim_pulse` | Button press emits a configured modifier + D-Pad pulse |

@@ -21,8 +21,8 @@ Il décrit le profil triple, [`config.triple.toml`](../../config.triple.toml). L
 
 | Élément physique (VelocityOne) | Code evdev source | Manette virtuelle | Cible Xbox | Fonction MSFS recommandée |
 | :--- | :--- | :--- | :--- | :--- |
-| Levier gaz 1 | `ABS_RZ` | **Manette 2** — AirTuxOne - Throttle 1 | `ABS_Y` (stick gauche vertical, inversé) | **Poussée 1** |
-| Levier gaz 2 | `ABS_THROTTLE` | **Manette 3** — AirTuxOne - Throttle 2 | `ABS_RY` (stick droit vertical, inversé) | **Poussée 2** |
+| Levier gaz 1 | `ABS_RZ` | **Manette 2** — AirTuxOne - Throttle 1 | `ABS_Y` (stick gauche vertical) | **Poussée 1** |
+| Levier gaz 2 | `ABS_THROTTLE` | **Manette 3** — AirTuxOne - Throttle 2 | `ABS_RY` (stick droit vertical) | **Poussée 2** |
 | Molette trim | `ABS_RUDDER` | Aucune | Non mappée | À configurer séparément |
 
 ### Boutons face (A/B/X/Y)
@@ -68,7 +68,7 @@ Correspondance **1:1** — le démon maintient **LB** + le bouton face tant que 
 ## Notes importantes de configuration
 
 1. **H2 → stick droit :** mini-stick tête = regard horizontal + vertical dans MSFS (RS X / RS Y).
-2. **Gaz :** dans le profil triple, `ABS_RZ` est envoyé vers le stick gauche vertical de la manette 2 et `ABS_THROTTLE` vers le stick droit vertical de la manette 3. Les deux axes sont inversés (`invert = true`) et utilisent le mode `linear`.
+2. **Gaz :** dans le profil triple, `ABS_RZ` est envoyé vers l'axe vertical du stick gauche (`ABS_Y`) de la manette 2 et `ABS_THROTTLE` vers l'axe vertical du stick droit (`ABS_RY`) de la manette 3. Le mode `linear` étale chaque course sur toute la plage bipolaire du stick (-32768 à 32767). Avec `invert = false`, la valeur source minimale donne le minimum du stick et la valeur maximale son maximum.
 3. **Torsion / palonnier :** mode `split_triggers` (LT/RT analogiques uniquement). Ajustez `deadzone` si le palonnier dérive.
 4. **Courbes de sensibilité :** réduisez la réactivité entre **-20 % et -35 %** sur roulis et tangage.
 
@@ -97,8 +97,8 @@ Ce mapping est appliqué dans [`config.triple.toml`](../../config.triple.toml), 
 | Section TOML | Périphérique virtuel | Mapping |
 | :--- | :--- | :--- |
 | `[virtual_controller_1]` | **AirTuxOne** | Manche, H1/H2 et boutons |
-| `[virtual_controller_2]` | **AirTuxOne - Throttle 1** | `ABS_RZ` → `ABS_Y` (inversé) |
-| `[virtual_controller_3]` | **AirTuxOne - Throttle 2** | `ABS_THROTTLE` → `ABS_RY` (inversé) |
+| `[virtual_controller_2]` | **AirTuxOne - Throttle 1** | `ABS_RZ` → `ABS_Y` (stick gauche vertical) |
+| `[virtual_controller_3]` | **AirTuxOne - Throttle 2** | `ABS_THROTTLE` → `ABS_RY` (stick droit vertical) |
 
 Le mapping détaillé du manche ci-dessus concerne la section `[virtual_controller_1]`.
 
@@ -108,9 +108,9 @@ Le mapping détaillé du manche ci-dessus concerne la section `[virtual_controll
 | `split_triggers` | Torsion → LT/RT |
 | `modifier_hold` | B5–B8 → LB + bouton face maintenu |
 | `passthrough` | POV H1 / D-Pad |
-| `linear` | Plage source complète vers un axe de stick Xbox bipolaire ; utilisé pour les deux leviers de gaz |
-| `linear_positive` | Plage source complète vers un axe de stick positif |
-| `linear_trigger` | Plage source complète vers une gâchette 0–255 |
+| `linear` | Plage source complète vers un axe de stick Xbox bipolaire (-32768 à 32767) ; utilisé pour les deux leviers de gaz |
+| `linear_positive` | Plage source complète vers une moitié d'axe de stick (0 à 32767) |
+| `linear_trigger` | Plage source complète vers une gâchette unipolaire (0 à 255) |
 | `centered_trigger` | Axe source centré vers une gâchette 0–255, neutre à 128 |
 | `trim_impulse` | Mouvement d'axe émettant une impulsion D-Pad, avec modificateur optionnel |
 | `trim_pulse` | Appui bouton émettant une impulsion modificateur + D-Pad configurée |

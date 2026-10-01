@@ -57,8 +57,8 @@ product_id = 0x02A0
 
 [virtual_controller_2.mapping.axes]
 # Keep throttle levers on stick axes, not on analog triggers.
-# This matches the working dual profile and avoids the MSFS / browser idle drift.
-ABS_RZ = { target = "ABS_Y", invert = true, deadzone = 0, mode = "linear" }
+# Trigger axes are not reliably exposed by the browser / MSFS path used here.
+ABS_RZ = { target = "ABS_Y", invert = false, deadzone = 0, mode = "linear" }
 # Trim wheel: decreasing values → D-Pad up, increasing values → D-Pad down.
 ABS_RUDDER = { mode = "trim_impulse", hat = "ABS_HAT0Y", hat_up = -1, hat_down = 1, threshold = 64 }
 
@@ -73,6 +73,6 @@ vendor_id = 0x045E
 product_id = 0x02B0
 
 [virtual_controller_3.mapping.axes]
-ABS_THROTTLE = { target = "ABS_RY", invert = true, deadzone = 0, mode = "linear" }
+ABS_THROTTLE = { target = "ABS_RY", invert = false, deadzone = 0, mode = "linear" }
 
 [virtual_controller_3.mapping.buttons]
